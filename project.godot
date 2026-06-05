@@ -14,7 +14,7 @@ config/name="Waterways"
 config/description="A tool to generate river meshes with flow and foam maps based on bezier curves."
 config/tags=PackedStringArray("addons")
 run/main_scene="uid://07t7pirsv63g"
-config/features=PackedStringArray("4.5")
+config/features=PackedStringArray("4.6")
 config/icon="res://icon.png"
 
 [audio]

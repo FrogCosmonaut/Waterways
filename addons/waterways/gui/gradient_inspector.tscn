@@ -1,7 +1,7 @@
-[gd_scene load_steps=5 format=3 uid="uid://c34hw5u3n1nnt"]
+[gd_scene format=3 uid="uid://c34hw5u3n1nnt"]
 
-[ext_resource type="Script" path="res://addons/waterways/gui/gradient_inspector.gd" id="1"]
-[ext_resource type="Shader" path="res://addons/waterways/shaders/gui/gradient.gdshader" id="2"]
+[ext_resource type="Script" uid="uid://bbptp3mw8uyta" path="res://addons/waterways/gui/gradient_inspector.gd" id="1"]
+[ext_resource type="Shader" uid="uid://birl6x2dlqf58" path="res://addons/waterways/shaders/gui/gradient.gdshader" id="2"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_v5c7w"]
 bg_color = Color(1, 1, 1, 1)
@@ -12,17 +12,15 @@ shader = ExtResource("2")
 shader_parameter/color1 = Vector4(0.25, 0.25, 0.7, 1)
 shader_parameter/color2 = Vector4(0.25, 0.5, 0.7, 1)
 
-[node name="HBoxContainer" type="HBoxContainer"]
+[node name="HBoxContainer" type="HBoxContainer" unique_id=1254298548]
 offset_right = 400.0
 offset_bottom = 24.0
 theme_override_constants/separation = 16
 script = ExtResource("1")
 
-[node name="Color1" type="ColorPickerButton" parent="."]
+[node name="Color1" type="ColorPickerButton" parent="." unique_id=714947404]
 custom_minimum_size = Vector2(26, 26)
 layout_mode = 2
-offset_right = 26.0
-offset_bottom = 26.0
 theme_override_styles/normal = SubResource("StyleBoxFlat_v5c7w")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_v5c7w")
 theme_override_styles/hover = SubResource("StyleBoxFlat_v5c7w")
@@ -32,23 +30,16 @@ flat = true
 color = Color(0.25098, 0.25098, 0.701961, 1)
 edit_alpha = false
 
-[node name="Gradient" type="ColorRect" parent="."]
+[node name="Gradient" type="ColorRect" parent="." unique_id=28481502]
 material = SubResource("ShaderMaterial_hjpqg")
 custom_minimum_size = Vector2(0, 16)
 layout_mode = 2
-offset_left = 42.0
-offset_top = 5.0
-offset_right = 358.0
-offset_bottom = 21.0
 size_flags_horizontal = 3
 size_flags_vertical = 4
 
-[node name="Color2" type="ColorPickerButton" parent="."]
+[node name="Color2" type="ColorPickerButton" parent="." unique_id=1422910198]
 custom_minimum_size = Vector2(26, 26)
 layout_mode = 2
-offset_left = 374.0
-offset_right = 400.0
-offset_bottom = 26.0
 size_flags_vertical = 3
 theme_override_styles/normal = SubResource("StyleBoxFlat_v5c7w")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_v5c7w")

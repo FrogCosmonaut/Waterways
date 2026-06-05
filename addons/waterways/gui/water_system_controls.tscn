@@ -1,19 +1,17 @@
-[gd_scene load_steps=3 format=3 uid="uid://b7sb78as2wbok"]
+[gd_scene format=3 uid="uid://b7sb78as2wbok"]
 
-[ext_resource type="Script" path="res://addons/waterways/gui/water_system_controls.gd" id="1"]
-[ext_resource type="Script" path="res://addons/waterways/gui/water_system_menu.gd" id="2"]
+[ext_resource type="Script" uid="uid://bmlw3o7xlbykv" path="res://addons/waterways/gui/water_system_controls.gd" id="1"]
+[ext_resource type="Script" uid="uid://croticqny87sw" path="res://addons/waterways/gui/water_system_menu.gd" id="2"]
 
-[node name="WaterSystemControls" type="HBoxContainer"]
+[node name="WaterSystemControls" type="HBoxContainer" unique_id=1284102819]
 offset_right = 128.0
 offset_bottom = 26.0
 script = ExtResource("1")
-__meta__ = {
-"_edit_use_anchors_": false
-}
 
-[node name="WaterSystemMenu" type="MenuButton" parent="."]
-offset_right = 97.0
-offset_bottom = 26.0
+[node name="WaterSystemMenu" type="MenuButton" parent="." unique_id=1823060413]
+layout_mode = 2
 text = "WaterSystem"
-items = ["Generate System Maps", null, 0, false, false, 0, 0, null, "", false]
+item_count = 1
+popup/item_0/text = "Generate System Maps"
+popup/item_0/id = 0
 script = ExtResource("2")

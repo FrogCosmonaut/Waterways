@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3 uid="uid://bxnhjmi01fbr3"]
+[gd_scene format=3 uid="uid://bxnhjmi01fbr3"]
 
 [ext_resource type="Script" uid="uid://cqbme2frk5vaa" path="res://test_assets/script/raycast_test.gd" id="1_n5cqx"]
 [ext_resource type="Script" uid="uid://byt2oaoam06sd" path="res://addons/waterways/river_manager.gd" id="2_ifvba"]
@@ -74,20 +74,20 @@ shader_parameter/i_distmap = SubResource("ImageTexture_lqqgw")
 shader_parameter/i_valid_flowmap = true
 shader_parameter/i_uv2_sides = 1
 
-[node name="RaycastTest" type="Node3D"]
+[node name="RaycastTest" type="Node3D" unique_id=1522974218]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.0412163)
 script = ExtResource("1_n5cqx")
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1140536815]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0201228, 0, 0.091347)
 mesh = SubResource("SphereMesh_1upb3")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="MeshInstance3D"]
+[node name="StaticBody3D" type="StaticBody3D" parent="MeshInstance3D" unique_id=266844357]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshInstance3D/StaticBody3D"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshInstance3D/StaticBody3D" unique_id=1364340291]
 shape = SubResource("SphereShape3D_elpvl")
 
-[node name="River" type="Node3D" parent="."]
+[node name="River" type="Node3D" parent="." unique_id=87028290]
 script = ExtResource("2_ifvba")
 shape_step_length_divs = 1
 shape_step_width_divs = 1

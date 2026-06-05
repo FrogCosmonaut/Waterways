@@ -1,17 +1,19 @@
-[gd_scene load_steps=2 format=3 uid="uid://bkr2n0e2drrc4"]
+[gd_scene format=3 uid="uid://bkr2n0e2drrc4"]
 
-[ext_resource type="Script" path="res://addons/waterways/gui/progress_window.gd" id="1_xgojc"]
+[ext_resource type="Script" uid="uid://c2fbj6j2ds71r" path="res://addons/waterways/gui/progress_window.gd" id="1_xgojc"]
 
-[node name="Popup" type="PopupPanel"]
+[node name="Popup" type="PopupPanel" unique_id=811629039]
+oversampling_override = 1.0
 title = "Test"
 position = Vector2i(426, 240)
 size = Vector2i(300, 60)
+visible = true
 wrap_controls = false
 borderless = false
 min_size = Vector2i(300, 60)
 script = ExtResource("1_xgojc")
 
-[node name="ProgressBar" type="ProgressBar" parent="."]
+[node name="ProgressBar" type="ProgressBar" parent="." unique_id=1023427803]
 offset_left = 4.0
 offset_top = 4.0
 offset_right = 296.0
