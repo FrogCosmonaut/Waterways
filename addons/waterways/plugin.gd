@@ -321,7 +321,10 @@ func _river_progress_notified(progress: float, message: String) -> void:
 	_progress_window.show_progress(message, progress)
 
 	if progress >= 100.0:
-		_progress_window.call_deferred("hide")
+		# Keep the finished 100% state on screen briefly so it's actually seen,
+		# instead of closing the instant we reach 100%.
+		await get_tree().create_timer(0.5).timeout
+		_progress_window.hide()
 
 
 

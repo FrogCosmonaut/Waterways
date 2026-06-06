@@ -76,6 +76,7 @@ const DEFAULT_PARAMETERS = {
 	baking_foam_cutoff = 0.9,
 	baking_foam_offset = 0.1,
 	baking_foam_blur = 0.02,
+	baking_half_res_collision = false,
 	lod_lod0_distance = 50.0,
 }
 
@@ -101,6 +102,7 @@ var baking_flowmap_blur : float = 0.04
 var baking_foam_cutoff : float = 0.9
 var baking_foam_offset : float = 0.1
 var baking_foam_blur : float = 0.02
+@export var baking_half_res_collision : bool = false
 
 # Public variables
 var curve : Curve3D
@@ -590,7 +592,7 @@ func set_custom_shader(shader : Shader) -> void:
 			if shader.code == "":
 				var selected_shader = load(BUILTIN_SHADERS[mat_shader_type].shader_path) as Shader
 				shader.code = selected_shader.code
-	
+
 	if shader != null:
 		print("shader != null - set shader type to custom")
 		print(shader)
@@ -615,24 +617,78 @@ func _generate_river() -> void:
 
 
 func _generate_flowmap(flowmap_resolution : float) -> void:
-	
-	var image := Image.create(flowmap_resolution, flowmap_resolution, true, Image.FORMAT_RGB8)
-	image.fill(Color(0.0, 0.0, 0.0))
-	
-	progress_notified.emit(0.0, "Calculating Collisions (%sx%s)" % [flowmap_resolution, flowmap_resolution])
-	await get_tree().process_frame
-	
-	image = await WaterHelperMethods.generate_collisionmap(image, mesh_instance, baking_raycast_distance, baking_raycast_layers, _steps, shape_step_length_divs, shape_step_width_divs, self)
-	
-	progress_notified.emit(95.0, "Applying filters (%sx%s)" % [flowmap_resolution, flowmap_resolution])
-	await get_tree().process_frame
-	
+	# Progress budget: collision positions emit 0 to 45% (see generate_collision_positions),
+	# raycasts continue 45 to 90, filters ssends a 90, finished at 100.
+	const RAYCAST_PROGRESS_BASE: float = 45.0
+	const RAYCAST_PROGRESS_END: float = 90.0
+
+	var res := int(flowmap_resolution)
+	# Optionally raycast collisions at half resolution and upscale; the collision
+	# map is dilated and blurred afterwards, so the precision loss is small.
+	var collision_res := res / 2 if baking_half_res_collision else res
+	var image := Image.create(collision_res, collision_res, true, Image.FORMAT_RGB8)
+	image.fill(Color.BLACK)
+	await notify_progress(0.0, "Calculating Collisions (%sx%s)" % [collision_res, collision_res])
+
+	var global_trans: Transform3D = mesh_instance.global_transform
+	var mesh_arrays: Array = mesh_instance.mesh.surface_get_arrays(0)
+	var physics_space: RID = mesh_instance.get_world_3d().space
+
+	var baker_thread = Thread.new()
+	baker_thread.start(
+		WaterwaysHelperMethods.generate_collision_positions.bind(
+			global_trans, mesh_arrays, _steps,
+			shape_step_length_divs, shape_step_width_divs, collision_res, collision_res, self
+		)
+	)
+
+	while baker_thread.is_alive():
+		await get_tree().process_frame
+	var positions: Array = baker_thread.wait_to_finish()
+
+	var space_state := PhysicsServer3D.space_get_direct_state(physics_space)
+	var total := positions.size()
+	# Reuse the query params
+	var down_params := PhysicsRayQueryParameters3D.create(Vector3.ZERO, Vector3.ZERO, baking_raycast_layers)
+	var up_params := PhysicsRayQueryParameters3D.create(Vector3.ZERO, Vector3.ZERO, baking_raycast_layers)
+	var last_yield := Time.get_ticks_msec()
+	for i in total:
+		if Time.get_ticks_msec() - last_yield > 16:
+			await notify_progress(
+				RAYCAST_PROGRESS_BASE + (RAYCAST_PROGRESS_END - RAYCAST_PROGRESS_BASE) * float(i) / float(maxi(total, 1)),
+				"Raycasting (%sx%s)" % [res, res]
+			)
+			last_yield = Time.get_ticks_msec()
+
+		var px: Vector2i = positions[i][0]
+		var real_pos: Vector3 = positions[i][1]
+		var real_pos_up := real_pos + Vector3.UP * baking_raycast_distance
+
+		down_params.from = real_pos_up
+		down_params.to = real_pos
+		var result_down := space_state.intersect_ray(down_params)
+		if not result_down:
+			continue
+
+		up_params.from = real_pos
+		up_params.to = real_pos_up
+		var result_up := space_state.intersect_ray(up_params)
+		if result_up and result_up.normal.y < 0:
+			continue
+
+		image.set_pixel(px.x, px.y, Color.WHITE)
+
+	await notify_progress(RAYCAST_PROGRESS_END, "Applying filters (%sx%s)" % [res, res])
+
+	# Upscale the half-res collision map back to full resolution before filtering.
+	if collision_res != res:
+		image.resize(res, res, Image.INTERPOLATE_NEAREST)
+
 	# Calculate how many columns are in UV2
 	_uv2_sides = WaterwaysHelperMethods.calculate_side(_steps)
 	
-	var margin := int(round(float(flowmap_resolution) / float(_uv2_sides)))
-	
-	image = WaterwaysHelperMethods.add_margins(image, flowmap_resolution, margin)
+	var margin := res / float(_uv2_sides)
+	image = WaterwaysHelperMethods.add_margins(image, res, margin)
 
 	var collision_with_margins := ImageTexture.create_from_image(image)
 
@@ -658,7 +714,7 @@ func _generate_flowmap(flowmap_resolution : float) -> void:
 	var flowmap_blur_amount = baking_flowmap_blur / float(_uv2_sides) * flowmap_resolution
 	var foam_offset_amount = baking_foam_offset / float(_uv2_sides)
 	var foam_blur_amount = baking_foam_blur / float(_uv2_sides) * flowmap_resolution
-	
+
 	var flow_pressure_map = await renderer_instance.apply_flow_pressure(collision_with_margins, flowmap_resolution, _uv2_sides + 2.0)
 	var blurred_flow_pressure_map = await renderer_instance.apply_vertical_blur(flow_pressure_map, flow_pressure_blur_amount, flowmap_resolution + margin * 2)
 	var dilated_texture = await renderer_instance.apply_dilate(collision_with_margins, dilate_amount, 0.0, flowmap_resolution + margin * 2)
@@ -669,7 +725,7 @@ func _generate_flowmap(flowmap_resolution : float) -> void:
 	var blurred_foam_map = await renderer_instance.apply_blur(foam_map, foam_blur_amount, flowmap_resolution + margin * 2)
 	var flow_foam_noise_img = await renderer_instance.apply_combine(blurred_flow_map, blurred_flow_map, blurred_foam_map, tiled_noise)
 	var dist_pressure_img = await renderer_instance.apply_combine(dilated_texture, blurred_flow_pressure_map)
-	
+
 	# Debug texture gen
 #	flow_pressure_map.get_image().save_png("res://test_assets/baked_pressure_map.png")
 #	blurred_flow_pressure_map.get_image().save_png("res://test_assets/baked_pressure_map_blurred.png")
@@ -677,23 +733,25 @@ func _generate_flowmap(flowmap_resolution : float) -> void:
 #	normal_map.get_image().save_png("res://test_assets/normal_map.png")
 #	flow_map.get_image().save_png("res://test_assets/flow_map.png")
 #	blurred_flow_map.get_image().save_png("res://test_assets/blurred_flow_map.png")
-	
+
 	remove_child(renderer_instance) # cleanup
-	
-	var flow_foam_noise_result = flow_foam_noise_img.get_image().get_region(Rect2(margin, margin, flowmap_resolution, flowmap_resolution))
-	var dist_pressure_result = dist_pressure_img.get_image().get_region(Rect2(margin, margin, flowmap_resolution, flowmap_resolution))
-	
-	flow_foam_noise = flow_foam_noise_img
-	dist_pressure = dist_pressure_img
-	
+
+	flow_foam_noise = WaterwaysHelperMethods.save_baked_texture(flow_foam_noise_img, self, "flow_foam")
+	dist_pressure = WaterwaysHelperMethods.save_baked_texture(dist_pressure_img, self, "dist_pressure")
+
 	set_materials("i_flowmap", flow_foam_noise)
 	set_materials("i_distmap", dist_pressure)
 	set_materials("i_valid_flowmap", true)
 	set_materials("i_uv2_sides", _uv2_sides)
 	valid_flowmap = true
-	progress_notified.emit(100.0, "Finished")
-	await get_tree().process_frame
+	await notify_progress(100.0, "Finished")
 	update_configuration_warnings()
+
+
+## Emits the bake progress signal and yields a frame so the progressbar shows correctly.
+func notify_progress(percentage : float, message : String) -> void:
+	progress_notified.emit(percentage, message)
+	await get_tree().process_frame
 
 
 # Signal Methods

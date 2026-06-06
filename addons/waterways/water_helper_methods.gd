@@ -149,88 +149,94 @@ static func generate_river_mesh(curve: Curve3D, steps: int, step_length_divs: in
 	return mesh3
 
 
-static func generate_collisionmap(image: Image, mesh_instance: MeshInstance3D, raycast_dist: float, raycast_layers: int, steps: int, step_length_divs: int, step_width_divs: int, river) -> Image:
-	var space_state := mesh_instance.get_world_3d().direct_space_state
-	
-	var uv2 := mesh_instance.mesh.surface_get_arrays(0)[5] as PackedVector2Array
-	var verts := mesh_instance.mesh.surface_get_arrays(0)[0] as PackedVector3Array
-	# We need to move the verts into world space
+static func generate_collision_positions(
+	global_trans: Transform3D,
+	mesh_arrays: Array,
+	steps: int,
+	step_length_divs: int,
+	step_width_divs: int,
+	img_width: int,
+	img_height: int,
+	river: WaterwaysRiver,
+) -> Array:  # Arraty of [Vector2i pixel, Vector3 world_pos]
+	const FINAL_PROGRESS: float = 45.0
+	const PROGRESS_FREQ: int = 30
+
+	var uv2: PackedVector2Array = mesh_arrays[5]
+	var verts: PackedVector3Array = mesh_arrays[0]
+
+	# move the verts into world space once, read-only for the workers
 	var world_verts := PackedVector3Array()
+	world_verts.resize(verts.size())
 	for v in verts.size():
-		world_verts.append( mesh_instance.global_transform * (verts[v]) )
-	
+		world_verts[v] = global_trans * verts[v]
+
 	var tris_in_step_quad := step_length_divs * step_width_divs * 2
 	var side := calculate_side(steps)
-	var percentage = 0.0
-	
-	river.emit_signal("progress_notified", percentage, "Calculating Collisions (" + str(image.get_width()) + "x" + str(image.get_width()) + ")")
-	await river.get_tree().process_frame
-	
-	#var ray_params := PhysicsRayQueryParameters3D.create(Vector3(0.0, 5.0, 0.0), Vector3(0.0, 0.0, 0.0), raycast_layers)
-	#ray_params_up.collision_mask = raycast_layers
-	#var result = space_state.intersect_ray(ray_params)
-	
-	#print(result)
-	
-	for x in image.get_width():
-		var cur_percentage := float(x) / float(image.get_width())
-		if cur_percentage > percentage + 0.1:
-			percentage += 0.1
-			
-			river.emit_signal("progress_notified", percentage, "Calculating Collisions (" + str(image.get_width()) + "x" + str(image.get_width()) + ")")
-			await river.get_tree().process_frame
-		for y in image.get_height():
-			var uv_coordinate := Vector2( ( 0.5 + float(x))  / float(image.get_width()), ( 0.5 + float(y)) / float(image.get_height()) )
-			var baryatric_coords : Vector3
-			var correct_triangle := []
-			
-			var pixel := int(x * image.get_width() + y)
-			var column := (pixel / image.get_width()) / (image.get_width() / side)
-			var row := (pixel % image.get_width()) / (image.get_width() / side)
+	# how many pixels wide each UV2 tile is (constant for the whole map)
+	var pixels_per_tile := img_width / side
+
+	var column_results: Array = []
+	column_results.resize(img_width)
+	var mutex := Mutex.new()
+	var counter := [0]  # boxed so the workers share one count
+
+	var process_column := func(x: int) -> void:
+		var local: Array = []
+		var column := x / pixels_per_tile
+		for y in img_height:
+			var row := y / pixels_per_tile
 			var step_quad := column * side + row
-				
 			if step_quad >= steps:
-				break # we are in the empty part of UV2 so we break to the next column
-			
+				break  # empty part of UV2, move to the next column
+
+			var uv_coordinate := Vector2(
+				(0.5 + float(x)) / float(img_width),
+				(0.5 + float(y)) / float(img_height),
+			)
+			var correct_triangle := Vector3i(-1, -1, -1)
+			var baryatric_coords := Vector3.ZERO
 			for tris in tris_in_step_quad:
 				var offset_tris: int = (tris_in_step_quad * step_quad) + tris
-				var triangle := PackedVector2Array()
-				triangle.append(uv2[offset_tris * 3])
-				triangle.append(uv2[offset_tris * 3 + 1])
-				triangle.append(uv2[offset_tris * 3 + 2])
 				var p := Vector3(uv_coordinate.x, uv_coordinate.y, 0.0)
 				var a := Vector3(uv2[offset_tris * 3].x, uv2[offset_tris * 3].y, 0.0)
 				var b := Vector3(uv2[offset_tris * 3 + 1].x, uv2[offset_tris * 3 + 1].y, 0.0)
 				var c := Vector3(uv2[offset_tris * 3 + 2].x, uv2[offset_tris * 3 + 2].y, 0.0)
-				baryatric_coords = cart2bary(p, a, b, c)
-				
-				if point_in_bariatric(baryatric_coords):
-					correct_triangle = [offset_tris * 3, offset_tris * 3 + 1, offset_tris * 3 + 2]
+				baryatric_coords = WaterwaysHelperMethods.cart2bary(p, a, b, c)
+				if WaterwaysHelperMethods.point_in_bariatric(baryatric_coords):
+					correct_triangle = Vector3i(offset_tris * 3, offset_tris * 3 + 1, offset_tris * 3 + 2)
 					break # we have the correct triangle so we break out of loop
 
-			if correct_triangle:
-				var vert0: Vector3 = world_verts[correct_triangle[0]] 
-				var vert1: Vector3 = world_verts[correct_triangle[1]] 
-				var vert2: Vector3 = world_verts[correct_triangle[2]]
-				
-				var real_pos := bary2cart(vert0, vert1, vert2, baryatric_coords)
-				var real_pos_up := real_pos + Vector3.UP * raycast_dist
+			if correct_triangle.x != -1:
+				var vert0: Vector3 = world_verts[correct_triangle.x]
+				var vert1: Vector3 = world_verts[correct_triangle.y]
+				var vert2: Vector3 = world_verts[correct_triangle.z]
+				local.append([Vector2i(x, y), WaterwaysHelperMethods.bary2cart(vert0, vert1, vert2, baryatric_coords)])
 
-				var ray_params_up := PhysicsRayQueryParameters3D.create(real_pos, real_pos_up, raycast_layers)
-				var result_up = space_state.intersect_ray(ray_params_up)
+		mutex.lock()
+		column_results[x] = local
+		counter[0] += 1
+		var done: int = counter[0]
+		mutex.unlock()
+		if done % PROGRESS_FREQ == 0 or done == img_width:
+			river.call_deferred(
+				"emit_signal", "progress_notified",
+				FINAL_PROGRESS * float(done) / float(img_width),
+				"Calculating Collisions (%sx%s)" % [img_width, img_height]
+			)
 
-				var ray_params_down := PhysicsRayQueryParameters3D.create(real_pos_up, real_pos, raycast_layers)
-				var result_down = space_state.intersect_ray(ray_params_down)
+	river.call_deferred(
+		"emit_signal", "progress_notified", 0.0,
+		"Calculating Collisions (%sx%s)" % [img_width, img_height]
+	)
+	var task_id := WorkerThreadPool.add_group_task(process_column, img_width, -1, false, "Waterways collision positions")
+	WorkerThreadPool.wait_for_group_task_completion(task_id)
 
-				var up_hit_frontface := false
-				if result_up:
-					if result_up.normal.y < 0:
-						true
-				
-				if result_up or result_down:
-					if not up_hit_frontface and result_down:
-						image.set_pixel(x, y, Color(1.0, 1.0, 1.0))
-	return image
+	# add everything to one list, order is irrelevant for raycasting
+	var positions: Array = []
+	for col in column_results:
+		positions.append_array(col)
+	return positions
 
 
 # Adds offset margins so filters will correctly extend across UV edges
@@ -241,5 +247,29 @@ static func add_margins(image : Image, resolution : int, margin : int) -> Image:
 	image_with_margins.blend_rect(image, Rect2i(0, resolution - margin, resolution, margin), Vector2i(margin + margin, 0))
 	image_with_margins.blend_rect(image, Rect2i(0, 0, resolution, resolution), Vector2i(margin, margin))
 	image_with_margins.blend_rect(image, Rect2i(0, 0, resolution, margin), Vector2i(0, resolution + margin))
-	
+
 	return image_with_margins
+
+
+## Saves a baked map next to the current scene as a compressed .res file and
+## returns a reference, so the texture lives on the disk instead of embedded in the .tscn
+static func save_baked_texture(texture : Texture2D, node : Node, suffix : String) -> Texture2D:
+	var scene_root := node.get_tree().get_edited_scene_root()
+	if scene_root == null or scene_root.scene_file_path.is_empty():
+		push_warning("Waterways: save the scene before baking so the '%s' map is stored on disk. Embedding it in the scene for now, which bloats the .tscn." % suffix)
+		return texture
+
+	var dir := scene_root.scene_file_path.get_basename() + "_waterways"
+	if not DirAccess.dir_exists_absolute(dir):
+		DirAccess.make_dir_recursive_absolute(dir)
+
+	var node_id := node.name if node == scene_root else String(scene_root.get_path_to(node)).replace("/", "_")
+	var path := dir.path_join("%s_%s.res" % [node_id, suffix])
+
+	var err := ResourceSaver.save(texture, path, ResourceSaver.FLAG_COMPRESS)
+	if err != OK:
+		push_warning("Waterways: could not save the '%s' map to %s (error %d). Embedding it in the scene instead." % [suffix, path, err])
+		return texture
+
+	texture.take_over_path(path)
+	return texture

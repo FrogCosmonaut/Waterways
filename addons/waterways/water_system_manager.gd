@@ -130,7 +130,8 @@ func generate_system_maps() -> void:
 	add_child(filter_renderer)
 	
 	system_map = await filter_renderer.apply_combine(flow_map, flow_map, height_map) as ImageTexture
-	
+	system_map = WaterwaysHelperMethods.save_baked_texture(system_map, self, "system_map") as ImageTexture
+
 	remove_child(filter_renderer)
 	
 	# give the map and coordinates to all nodes in the wet_group
