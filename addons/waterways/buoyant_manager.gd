@@ -46,7 +46,7 @@ func _physics_process(_delta: float) -> void:
 	if Engine.is_editor_hint() or _system == null or _rigid_body == null:
 		return
 
-	var depth := _system.get_water_altitude(global_transform.origin) - global_transform.origin.y
+	var depth := _system.get_water_altitude(global_transform.origin)
 	if depth <= 0.0:
 		# above water: use the body original damping
 		_rigid_body.linear_damp = _default_linear_damp
