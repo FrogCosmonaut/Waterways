@@ -4,9 +4,9 @@
 class_name WaterwaysProgressWindow
 extends Window
 
-@onready var _progress_bar = $ProgressBar
+@onready var _progress_bar: ProgressBar = %ProgressBar
 
 
-func show_progress(message, progress) -> void:
-	self.title = message
-	_progress_bar.ratio = progress
+func show_progress(message: String, progress: float) -> void:
+	title = message
+	_progress_bar.value = progress

@@ -314,15 +314,15 @@ func _forward_3d_gui_input_river(camera: Camera3D, event: InputEvent) -> int:
 	return AFTER_GUI_INPUT_PASS
 
 
-func _river_progress_notified(progress : float, message : String) -> void:
-	if message == "finished":
-		_progress_window.hide()
+func _river_progress_notified(progress: float, message: String) -> void:
+	if not _progress_window.visible:
+		_progress_window.popup_centered()
 
-	else:
-		if not _progress_window.visible:
-			_progress_window.popup_centered()
+	_progress_window.show_progress(message, progress)
 
-		_progress_window.show_progress(message, progress)
+	if progress >= 100.0:
+		_progress_window.call_deferred("hide")
+
 
 
 func _show_river_control_panel() -> void:
