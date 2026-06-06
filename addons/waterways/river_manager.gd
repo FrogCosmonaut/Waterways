@@ -12,10 +12,10 @@ signal river_changed
 signal progress_notified
 #signal albedo_set
 
+const FILTER_RENDERER_PATH: String = "res://addons/waterways/filter_renderer.tscn"
+const FLOW_OFFSET_NOISE_TEXTURE_PATH: String = "res://addons/waterways/textures/flow_offset_noise.png"
+const FOAM_NOISE_PATH: String = "res://addons/waterways/textures/foam_noise.png"
 
-const FILTER_RENDERER_PATH = "res://addons/waterways/filter_renderer.tscn"
-const FLOW_OFFSET_NOISE_TEXTURE_PATH = "res://addons/waterways/textures/flow_offset_noise.png"
-const FOAM_NOISE_PATH = "res://addons/waterways/textures/foam_noise.png"
 
 const MATERIAL_CATEGORIES = {
 	albedo_ = "Albedo",
@@ -67,24 +67,6 @@ const DEBUG_SHADER = {
 			path = "res://addons/waterways/textures/debug_arrow.svg"
 		}
 	]
-}
-
-const DEFAULT_PARAMETERS = {
-	shape_step_length_divs = 1,
-	shape_step_width_divs = 1,
-	shape_smoothness = 0.5,
-	mat_shader_type = 0,
-	mat_custom_shader = null,
-	baking_resolution = 2, 
-	baking_raycast_distance = 10.0,
-	baking_raycast_layers = 1,
-	baking_dilate = 0.6,
-	baking_flowmap_blur = 0.04,
-	baking_foam_cutoff = 0.9,
-	baking_foam_offset = 0.1,
-	baking_foam_blur = 0.02,
-	baking_half_res_collision = false,
-	lod_lod0_distance = 50.0,
 }
 
 
@@ -214,26 +196,30 @@ func _get(property: StringName):
 		return _material.get_shader_parameter(param_name)
 
 
-func _property_can_revert(property : StringName) -> bool:
+func _get_defaults() -> WaterwaysRiver:
+	if not _defaults:
+		_defaults = WaterwaysRiver.new()
+	return _defaults
+
+
+func _property_can_revert(property: StringName) -> bool:
 	if str(property).begins_with("mat_"):
 		var param_name: String = str(property).replace("mat_", "")
 		return _material.property_can_revert(str("shader_parameter/", param_name))
 
-	if not DEFAULT_PARAMETERS.has(property):
+	var defaults := _get_defaults()
+	if not property in defaults:
 		return false
-	if get(property) != DEFAULT_PARAMETERS[property]:
-		return true
-	return false
+	return get(property) != defaults.get(property)
 
 
-func _property_get_revert(property : StringName):
+func _property_get_revert(property: StringName):
 	if str(property).begins_with("mat_"):
 		var param_name: String = str(property).replace("mat_", "")
 		var revert_value = _material.property_get_revert(str("shader_parameter/", param_name))
 		return revert_value
-	
-	if DEFAULT_PARAMETERS.has(property):
-		return DEFAULT_PARAMETERS[property]
+
+	return _get_defaults().get(property)
 
 
 func _init() -> void:
