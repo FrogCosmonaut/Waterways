@@ -38,10 +38,10 @@ func _ready() -> void:
 			_system = systems[0] as WaterwaysSystemManager
 
 
-func _get_configuration_warning() -> String:
+func _get_configuration_warnings() -> PackedStringArray:
 	if _rb == null:
-		return "Bouyant node must be a direct child of a RigidDynamicBody3D to function."
-	return ""
+		return ["Buoyant node must be a direct child of a RigidBody3D to function."]
+	return []
 
 
 func _get_rotation_correction() -> Vector3:

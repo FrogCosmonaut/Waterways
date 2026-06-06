@@ -31,17 +31,17 @@ func _ready() -> void:
 	if system_map != null:
 		_system_img = system_map.get_image()
 	else:
-		push_warning("No WaterSystem map!")
+		push_warning("No WaterwaysSystemManager map!")
 
 
 func _exit_tree() -> void:
 	remove_from_group("waterways_system")
 
 
-func _get_configuration_warning() -> String:
+func _get_configuration_warnings() -> PackedStringArray:
 	if system_map == null:
-		return "No System Map is set. Select WaterSystem -> Generate System Map to generate and assign one."
-	return ""
+		return ["No System Map is set. Select WaterwaysSystemManager -> Generate System Map to generate and assign one."]
+	return []
 
 
 func _get_property_list() -> Array:

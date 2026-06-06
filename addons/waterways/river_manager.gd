@@ -418,11 +418,10 @@ func _enter_tree() -> void:
 	set_materials("i_texture_foam_noise", load(FOAM_NOISE_PATH) as Texture2D)
 
 
-func _get_configuration_warning() -> String:
+func _get_configuration_warnings() -> PackedStringArray:
 	if valid_flowmap:
-		return ""
-	else:
-		return "No flowmap is set. Select River -> Generate Flow & Foam Map to generate and assign one."
+		return []
+	return ["No flowmap is set. Select River -> Generate Flow & Foam Map to generate and assign one."]
 
 
 func get_transformed_aabb() -> AABB:
