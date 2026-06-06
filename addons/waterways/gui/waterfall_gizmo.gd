@@ -1,6 +1,5 @@
+class_name WaterwaysWaterfallGizmo
 extends EditorNode3DGizmoPlugin
-
-const WaterfallManager = preload("./../waterfall_manager.gd")
 
 var editor_plugin : EditorPlugin
 
@@ -26,7 +25,7 @@ func _get_gizmo_name() -> String:
 
 
 func _has_gizmo(node_3d: Node3D) -> bool:
-	return node_3d is WaterfallManager
+	return node_3d is WaterwaysWaterfall
 
 
 func _get_handle_name(gizmo: EditorNode3DGizmo, index: int, secondary: bool) -> String:
@@ -34,7 +33,7 @@ func _get_handle_name(gizmo: EditorNode3DGizmo, index: int, secondary: bool) -> 
 
 
 func _get_handle_value(gizmo: EditorNode3DGizmo, handle_id: int, secondary: bool):
-	var waterfall : WaterfallManager = gizmo.get_node_3d()
+	var waterfall : WaterwaysWaterfall = gizmo.get_node_3d()
 	if handle_id == 0:
 		return waterfall.points[0]
 	if handle_id == 1:
@@ -42,7 +41,7 @@ func _get_handle_value(gizmo: EditorNode3DGizmo, handle_id: int, secondary: bool
 
 
 func _set_handle(gizmo: EditorNode3DGizmo, handle_id: int, secondary: bool, camera: Camera3D, screen_pos: Vector2) -> void:
-	var waterfall : WaterfallManager = gizmo.get_node_3d()
+	var waterfall : WaterwaysWaterfall = gizmo.get_node_3d()
 	
 	var global_transform : Transform3D = waterfall.transform
 	if waterfall.is_inside_tree():
@@ -65,7 +64,7 @@ func _set_handle(gizmo: EditorNode3DGizmo, handle_id: int, secondary: bool, came
 
 
 func _commit_handle(gizmo: EditorNode3DGizmo, handle_id: int, secondary: bool, restore, cancel: bool) -> void:
-	var waterfall : WaterfallManager = gizmo.get_node_3d()
+	var waterfall : WaterwaysWaterfall = gizmo.get_node_3d()
 	
 	var ur := editor_plugin.get_undo_redo()
 	ur.create_action("Change Waterfall Shape")
@@ -84,7 +83,7 @@ func _commit_handle(gizmo: EditorNode3DGizmo, handle_id: int, secondary: bool, r
 func _redraw(gizmo: EditorNode3DGizmo) -> void:
 	gizmo.clear()
 	
-	var waterfall := gizmo.get_node_3d() as WaterfallManager
+	var waterfall := gizmo.get_node_3d() as WaterwaysWaterfall
 	
 	var handles := PackedVector3Array()
 	handles.append(waterfall.points[0])

@@ -1,4 +1,6 @@
 @tool
+@icon("./icons/river.svg")
+class_name WaterwaysWaterfallConfiguration
 extends Resource
 
 @export var width: float = 3.0:

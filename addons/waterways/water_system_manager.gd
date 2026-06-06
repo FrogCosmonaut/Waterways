@@ -1,11 +1,12 @@
 # Copyright © 2023 Kasper Arnklit Frandsen - MIT License
 # See `LICENSE.md` included in the source distribution for details.
 @tool
+@icon("./icons/system.svg")
+class_name WaterwaysSystemManager
 extends Node3D
 
-const SystemMapRenderer = preload("./system_map_renderer.tscn")
-const FilterRenderer = preload("./filter_renderer.tscn")
-const RiverManager = preload("./river_manager.gd")
+const SYSTEM_MAP_RENDERER_SCENE: PackedScene = preload("./system_map_renderer.tscn")
+const FILTER_RENDERER_SCENE: PackedScene = preload("./filter_renderer.tscn")
 
 var system_map : ImageTexture = null: set = set_system_map
 var system_bake_resolution := 2
@@ -99,10 +100,10 @@ func _get_property_list() -> Array:
 
 
 func generate_system_maps() -> void:
-	var rivers: Array[RiverManager]
+	var rivers: Array[WaterwaysRiver]
 	
 	for child in get_children():
-		if child is RiverManager:
+		if child is WaterwaysRiver:
 			rivers.append(child)
 	
 	# We need to make the aabb out of the first river, so we don't include 0,0
@@ -114,7 +115,7 @@ func generate_system_maps() -> void:
 		_system_aabb = _system_aabb.merge(river_aabb)
 	print(_system_aabb)
 	
-	var renderer = SystemMapRenderer.instantiate()
+	var renderer: WaterwaysSystemMapRenderer = SYSTEM_MAP_RENDERER_SCENE.instantiate()
 	add_child(renderer)
 	var resolution := pow(2, system_bake_resolution + 7)
 	var flow_map: ImageTexture = await renderer.grab_flow(rivers, _system_aabb, resolution)
@@ -123,7 +124,7 @@ func generate_system_maps() -> void:
 	
 	remove_child(renderer)
 	
-	var filter_renderer = FilterRenderer.instantiate()
+	var filter_renderer: WaterwaysFilterRenderer = FILTER_RENDERER_SCENE.instantiate()
 	add_child(filter_renderer)
 	
 	system_map = await filter_renderer.apply_combine(flow_map, flow_map, height_map) as ImageTexture

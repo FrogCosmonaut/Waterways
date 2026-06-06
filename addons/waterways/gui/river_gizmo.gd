@@ -1,20 +1,19 @@
 # Copyright © 2023 Kasper Arnklit Frandsen - MIT License
 # See `LICENSE.md` included in the source distribution for details.
+class_name WaterwaysRiverGizmo
 extends EditorNode3DGizmoPlugin
 
-const RiverManager = preload("./../river_manager.gd")
-const RiverControls = preload("./river_controls.gd")
 const HANDLES_PER_POINT = 5
 const AXIS_CONSTRAINT_LENGTH = 4096
 const AXIS_MAPPING := {
-	RiverControls.CONSTRAINTS.AXIS_X: Vector3.RIGHT,
-	RiverControls.CONSTRAINTS.AXIS_Y: Vector3.UP,
-	RiverControls.CONSTRAINTS.AXIS_Z: Vector3.BACK,
+	WaterwaysRiverControls.CONSTRAINTS.AXIS_X: Vector3.RIGHT,
+	WaterwaysRiverControls.CONSTRAINTS.AXIS_Y: Vector3.UP,
+	WaterwaysRiverControls.CONSTRAINTS.AXIS_Z: Vector3.BACK,
 }
 const PLANE_MAPPING := {
-	RiverControls.CONSTRAINTS.PLANE_YZ: Vector3.RIGHT,
-	RiverControls.CONSTRAINTS.PLANE_XZ: Vector3.UP,
-	RiverControls.CONSTRAINTS.PLANE_XY: Vector3.BACK,
+	WaterwaysRiverControls.CONSTRAINTS.PLANE_YZ: Vector3.RIGHT,
+	WaterwaysRiverControls.CONSTRAINTS.PLANE_XZ: Vector3.UP,
+	WaterwaysRiverControls.CONSTRAINTS.PLANE_XY: Vector3.BACK,
 }
 
 var editor_plugin: EditorPlugin
@@ -79,7 +78,7 @@ func _get_gizmo_name() -> String:
 
 
 func _has_gizmo(node_3d) -> bool:
-	return node_3d is RiverManager
+	return node_3d is WaterwaysRiver
 
 
 # TODO - figure out how this new "secondary" bool should be used
@@ -171,7 +170,7 @@ func _get_point_index(curve_index: int, is_center: bool, is_cp_in: bool, is_cp_o
 
 # TODO - figure out of this new "secondary" bool should be used
 func _get_handle_value(gizmo: EditorNode3DGizmo, index: int, secondary: bool):
-	var river: RiverManager = gizmo.get_node_3d()
+	var river: WaterwaysRiver = gizmo.get_node_3d()
 	var point_count = river.curve.get_point_count()
 	if _is_center_point(index, point_count):
 		return river.curve.get_point_position(_get_curve_index(index, point_count))
@@ -186,7 +185,7 @@ func _get_handle_value(gizmo: EditorNode3DGizmo, index: int, secondary: bool):
 # Called when handle is moved
 # TODO - figure out how this new "secondary" bool should be used
 func _set_handle(gizmo: EditorNode3DGizmo, index: int, secondary: bool, camera: Camera3D, point: Vector2) -> void:
-	var river: RiverManager = gizmo.get_node_3d()
+	var river: WaterwaysRiver = gizmo.get_node_3d()
 	var space_state = river.get_world_3d().direct_space_state
 
 	var global_transform: Transform3D = river.transform
@@ -238,7 +237,7 @@ func _set_handle(gizmo: EditorNode3DGizmo, index: int, secondary: bool, camera: 
 	if is_center or is_cp_in or is_cp_out:
 		var new_pos
 
-		if editor_plugin.constraint == RiverControls.CONSTRAINTS.COLLIDERS:
+		if editor_plugin.constraint == WaterwaysRiverControls.CONSTRAINTS.COLLIDERS:
 			# TODO - make in / out handles snap to a plane based on the normal of
 			# the raycast hit instead.
 			var ray_params: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.new()
@@ -248,7 +247,7 @@ func _set_handle(gizmo: EditorNode3DGizmo, index: int, secondary: bool, camera: 
 			if result:
 				new_pos = result.position
 
-		elif editor_plugin.constraint == RiverControls.CONSTRAINTS.NONE:
+		elif editor_plugin.constraint == WaterwaysRiverControls.CONSTRAINTS.NONE:
 			var plane = Plane(old_pos_global, old_pos_global + camera.transform.basis.x, old_pos_global + camera.transform.basis.y)
 			new_pos = plane.intersects_ray(ray_from, ray_dir)
 
@@ -316,7 +315,7 @@ func _set_handle(gizmo: EditorNode3DGizmo, index: int, secondary: bool, camera: 
 # Handle Undo / Redo of handle movements
 # TODO - figure out of this new "secondary" bool should be used
 func _commit_handle(gizmo: EditorNode3DGizmo, index: int, secondary: bool, restore, cancel: bool = false) -> void:
-	var river: RiverManager = gizmo.get_node_3d()
+	var river: WaterwaysRiver = gizmo.get_node_3d()
 	var point_count = river.curve.get_point_count()
 
 	var ur = editor_plugin.get_undo_redo()
@@ -365,7 +364,7 @@ func _redraw(gizmo: EditorNode3DGizmo) -> void:
 		_handle_lines_mat = get_material("handle_lines", gizmo)
 	gizmo.clear()
 
-	var river := gizmo.get_node_3d() as RiverManager
+	var river := gizmo.get_node_3d() as WaterwaysRiver
 
 	if not river.is_connected("river_changed", Callable(self, "_redraw")):
 		river.river_changed.connect(_redraw.bind(gizmo))
@@ -385,7 +384,7 @@ func _draw_path(gizmo: EditorNode3DGizmo, curve: Curve3D) -> void:
 	gizmo.add_lines(path, _path_mat)
 
 
-func _draw_handles(gizmo: EditorNode3DGizmo, river: RiverManager) -> void:
+func _draw_handles(gizmo: EditorNode3DGizmo, river: WaterwaysRiver) -> void:
 	var lines = PackedVector3Array()
 	var handles_center = PackedVector3Array()
 	var handles_center_wd = PackedVector3Array()

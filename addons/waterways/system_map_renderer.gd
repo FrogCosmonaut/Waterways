@@ -1,17 +1,17 @@
 # Copyright © 2023 Kasper Arnklit Frandsen - MIT License
 # See `LICENSE.md` included in the source distribution for details.
 @tool
+class_name WaterwaysSystemMapRenderer
 extends SubViewport
 
 const HEIGHT_SHADER_PATH = "res://addons/waterways/shaders/system_renders/system_height.gdshader"
 const FLOW_SHADER_PATH = "res://addons/waterways/shaders/system_renders/system_flow.gdshader"
 const ALPHA_SHADER_PATH = "res://addons/waterways/shaders/system_renders/alpha.gdshader"
-const RiverManager = preload("./river_manager.gd")
 
 var _camera: Camera3D
 var _container: Node3D
 
-func grab_height(water_objects: Array[RiverManager], aabb : AABB, resolution : float) -> ImageTexture:
+func grab_height(water_objects: Array[WaterwaysRiver], aabb : AABB, resolution : float) -> ImageTexture:
 	size = Vector2(resolution, resolution)
 	_camera = $Camera3D as Camera3D
 	_container = $Container as Node3D
@@ -56,7 +56,7 @@ func grab_height(water_objects: Array[RiverManager], aabb : AABB, resolution : f
 	return height_result
 
 
-func grab_alpha(water_objects: Array[RiverManager], aabb: AABB, resolution: float) -> ImageTexture:
+func grab_alpha(water_objects: Array[WaterwaysRiver], aabb: AABB, resolution: float) -> ImageTexture:
 	size = Vector2(resolution, resolution)
 	_camera = $Camera3D as Camera3D
 	_container = $Container as Node3D
@@ -98,7 +98,7 @@ func grab_alpha(water_objects: Array[RiverManager], aabb: AABB, resolution: floa
 	return alpha_result
 
 
-func grab_flow(water_objects: Array[RiverManager], aabb : AABB, resolution : float) -> ImageTexture:
+func grab_flow(water_objects: Array[WaterwaysRiver], aabb : AABB, resolution : float) -> ImageTexture:
 	size = Vector2(resolution, resolution)
 	_camera = $Camera3D as Camera3D
 	_container = $Container as Node3D

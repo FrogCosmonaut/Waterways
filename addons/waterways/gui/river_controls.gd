@@ -1,6 +1,7 @@
 # Copyright © 2023 Kasper Arnklit Frandsen - MIT License
 # See `LICENSE.md` included in the source distribution for details.
 @tool
+class_name WaterwaysRiverControls
 extends HBoxContainer
 
 signal mode_changed(mode: Mode)

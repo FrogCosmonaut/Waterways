@@ -1,15 +1,15 @@
 @tool
+class_name WaterwaysWaterfall
 extends Node3D
 
-const WaterfallConfiguration = preload("./waterfall_configuration.gd")
-const WaterHelperMethods = preload("./water_helper_methods.gd")
 const line_sample_resolution := 100
 
-@export var configuration: WaterfallConfiguration:
+@export var configuration: WaterwaysWaterfallConfiguration:
 	set(value):
 		configuration = value
 		configuration.changed.connect(_configuration_changed)
 		print("configuration set function is called")
+
 #@export var width := 3.0:
 #	set(value):
 #		width = value

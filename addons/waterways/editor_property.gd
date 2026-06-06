@@ -2,13 +2,14 @@
 # See `LICENSE.md` included in the source distribution for details.
 extends EditorProperty
 
-const GradientInspector = preload("./gui/gradient_inspector.gd")
 
-var _ui : GradientInspector
+const GRADIENT_INSPECTOR_SCENE: PackedScene = preload("res://addons/waterways/gui/gradient_inspector.tscn")
+
+var _ui : WaterwaysGradientInspector
 var _updating := false
 
 func _init() -> void:
-	_ui = preload("res://addons/waterways/gui/gradient_inspector.tscn").instantiate() as Control
+	_ui = GRADIENT_INSPECTOR_SCENE.instantiate() as Control
 	add_child(_ui) 
 	set_bottom_editor(_ui)
 	(_ui.get_node("Color1") as ColorPickerButton).color_changed.connect(gradient_changed)

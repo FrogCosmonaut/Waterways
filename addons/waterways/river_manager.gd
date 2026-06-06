@@ -1,9 +1,10 @@
 # Copyright © 2023 Kasper Arnklit Frandsen - MIT License
 # See `LICENSE.md` included in the source distribution for details.
 @tool
+@icon("./icons/river.svg")
+class_name WaterwaysRiver
 extends Node3D
 
-const WaterHelperMethods = preload("./water_helper_methods.gd")
 
 const FILTER_RENDERER_PATH = "res://addons/waterways/filter_renderer.tscn"
 const FLOW_OFFSET_NOISE_TEXTURE_PATH = "res://addons/waterways/textures/flow_offset_noise.png"
@@ -606,11 +607,11 @@ func set_lod0_distance(value : float) -> void:
 
 # Private Methods
 func _generate_river() -> void:
-	var average_width := WaterHelperMethods.sum_array(widths) / float(widths.size() / 2)
+	var average_width := WaterwaysHelperMethods.sum_array(widths) / float(widths.size() / 2)
 	_steps = int( max(1.0, round(curve.get_baked_length() / average_width)) )
 	
-	var river_width_values := WaterHelperMethods.generate_river_width_values(curve, _steps, shape_step_length_divs, shape_step_width_divs, widths)
-	mesh_instance.mesh = WaterHelperMethods.generate_river_mesh(curve, _steps, shape_step_length_divs, shape_step_width_divs, shape_smoothness, river_width_values)
+	var river_width_values := WaterwaysHelperMethods.generate_river_width_values(curve, _steps, shape_step_length_divs, shape_step_width_divs, widths)
+	mesh_instance.mesh = WaterwaysHelperMethods.generate_river_mesh(curve, _steps, shape_step_length_divs, shape_step_width_divs, shape_smoothness, river_width_values)
 	mesh_instance.mesh.surface_set_material(0, _material)
 
 
@@ -628,11 +629,11 @@ func _generate_flowmap(flowmap_resolution : float) -> void:
 	await get_tree().process_frame
 	
 	# Calculate how many columns are in UV2
-	_uv2_sides = WaterHelperMethods.calculate_side(_steps)
+	_uv2_sides = WaterwaysHelperMethods.calculate_side(_steps)
 	
 	var margin := int(round(float(flowmap_resolution) / float(_uv2_sides)))
 	
-	image = WaterHelperMethods.add_margins(image, flowmap_resolution, margin)
+	image = WaterwaysHelperMethods.add_margins(image, flowmap_resolution, margin)
 
 	var collision_with_margins := ImageTexture.create_from_image(image)
 

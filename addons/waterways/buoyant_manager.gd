@@ -1,9 +1,10 @@
 # Copyright © 2023 Kasper Arnklit Frandsen - MIT License
 # See `LICENSE.md` included in the source distribution for details.
 @tool
+@icon("./icons/buoyant.svg")
+class_name WaterwaysBuoyant
 extends Node3D
 
-const WaterSystem = preload("res://addons/waterways/water_system_manager.gd")
 
 
 @export var water_system_group_name : String = "waterways_system"
@@ -13,9 +14,9 @@ const WaterSystem = preload("res://addons/waterways/water_system_manager.gd")
 @export var water_resistance := 5.0
 
 var _rb : RigidBody3D
-var _system : WaterSystem
 var _default_linear_damp := -1.0
 var _default_angular_damp := -1.0
+var _system: WaterwaysSystemManager
 
 
 func _enter_tree() -> void:
@@ -33,8 +34,8 @@ func _exit_tree() -> void:
 func _ready() -> void:
 	var systems = get_tree().get_nodes_in_group(water_system_group_name)
 	if systems.size() > 0:
-		if systems[0] is WaterSystem:
-			_system = systems[0] as WaterSystem
+		if systems[0] is WaterwaysSystemManager:
+			_system = systems[0] as WaterwaysSystemManager
 
 
 func _get_configuration_warning() -> String:

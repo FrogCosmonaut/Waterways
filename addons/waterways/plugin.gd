@@ -3,23 +3,16 @@
 @tool
 extends EditorPlugin
 
-const WaterHelperMethods = preload("./water_helper_methods.gd")
-const WaterSystem = preload("./water_system_manager.gd")
-const RiverManager = preload("./river_manager.gd")
-const WaterfallManager = preload("./waterfall_manager.gd")
-const WaterfallConfiguration = preload("./waterfall_configuration.gd")
-const RiverGizmo = preload("./gui/river_gizmo.gd")
-const WaterfallGizmo = preload("./gui/waterfall_gizmo.gd")
-const InspectorPlugin = preload("./inspector_plugin.gd")
-const ProgressWindow = preload("./gui/progress_window.tscn")
-const RiverControls = preload("./gui/river_controls.gd")
+const RIVER_CONTROLS_SCENE: PackedScene = preload("./gui/river_controls.tscn")
+const WATER_SYSTEM_CONTROLS_SCENE: PackedScene = preload("./gui/water_system_controls.tscn")
+const PROGRESS_WINDOW_SCENE: PackedScene = preload("./gui/progress_window.tscn")
 
-var river_gizmo: RiverGizmo = RiverGizmo.new()
-var waterfall_gizmo: WaterfallGizmo = WaterfallGizmo.new()
-var gradient_inspector: InspectorPlugin = InspectorPlugin.new()
+var river_gizmo: WaterwaysRiverGizmo = WaterwaysRiverGizmo.new()
+var waterfall_gizmo: WaterwaysWaterfallGizmo = WaterwaysWaterfallGizmo.new()
+var gradient_inspector: WaterwaysInspectorPlugin = WaterwaysInspectorPlugin.new()
 
-var _river_controls = preload("./gui/river_controls.tscn").instantiate()
-var _water_system_controls = preload("./gui/water_system_controls.tscn").instantiate()
+var _river_controls = RIVER_CONTROLS_SCENE.instantiate()
+var _water_system_controls = WATER_SYSTEM_CONTROLS_SCENE.instantiate()
 var _edited_node = null
 var _progress_window = null
 var _editor_selection : EditorSelection = null
@@ -31,11 +24,6 @@ var selection_locked := false
 
 
 func _enter_tree() -> void:
-	add_custom_type("River", "Node3D",RiverManager, preload("./icons/river.svg"))
-	add_custom_type("Waterfall", "Node3D", WaterfallManager, preload("./icons/river.svg"))
-	add_custom_type("WaterfallConfiguration", "Resource", WaterfallConfiguration, preload("./icons/river.svg"))
-	add_custom_type("WaterSystem", "Node3D", preload("./water_system_manager.gd"), preload("./icons/system.svg"))
-	add_custom_type("Buoyant", "Node3D", preload("./buoyant_manager.gd"), preload("./icons/buoyant.svg"))
 	add_node_3d_gizmo_plugin(river_gizmo)
 	add_node_3d_gizmo_plugin(waterfall_gizmo)
 	add_inspector_plugin(gradient_inspector)
@@ -43,9 +31,9 @@ func _enter_tree() -> void:
 	waterfall_gizmo.editor_plugin = self
 	_river_controls.mode_changed.connect(_on_river_controls_mode_changed)
 	_river_controls.options_changed.connect(_on_river_controls_options_changed)
-	_progress_window = ProgressWindow.instantiate()
+	_progress_window = PROGRESS_WINDOW_SCENE.instantiate()
 	_river_controls.add_child(_progress_window)
-	_editor_selection = get_editor_interface().get_selection()
+	_editor_selection = EditorInterface.get_selection()
 	_editor_selection.selection_changed.connect(_on_selection_change)
 	scene_changed.connect(_on_scene_changed)
 	scene_closed.connect(_on_scene_closed)
@@ -68,11 +56,6 @@ func _on_generate_system_maps_pressed() -> void:
 
 
 func _exit_tree() -> void:
-	remove_custom_type("River")
-	remove_custom_type("Waterfall")
-	remove_custom_type("WaterfallConfiguration")
-	remove_custom_type("WaterSystem")
-	remove_custom_type("Buoyant")
 	remove_node_3d_gizmo_plugin(river_gizmo)
 	remove_node_3d_gizmo_plugin(waterfall_gizmo)
 	remove_inspector_plugin(gradient_inspector)
@@ -86,31 +69,31 @@ func _exit_tree() -> void:
 
 
 func _handles(node):
-	return node is RiverManager or node is WaterfallManager or node is WaterSystem
+	return node is WaterwaysRiver or node is WaterwaysWaterfall or node is WaterwaysSystemManager
 
 
 # TODO - I think this was commented out for 4.0 conversion and isn't needed anymore
 #func _edit(node):
 #	print("edit(), node is: ", node)
-#	if node is RiverManager:
+#	if node is WaterwaysRiver:
 #		_show_river_control_panel()
-#		_edited_node = node as RiverManager
-#	if node is WaterSystem:
+#		_edited_node = node as WaterwaysRiver
+#	if node is WaterwaysSystemManager:
 #		_show_water_system_control_panel()
-#		_edited_node = node as WaterSystem
+#		_edited_node = node as WaterwaysSystemManager
 
 
 func _on_selection_change() -> void:
-	_editor_selection = get_editor_interface().get_selection()
+	_editor_selection = EditorInterface.get_selection()
 	var selected = _editor_selection.get_selected_nodes()
 
 	# If selection is locked to a river, revert any selection change
-	if selection_locked and _edited_node is RiverManager:
+	if selection_locked and _edited_node is WaterwaysRiver:
 		if len(selected) == 0 or selected[0] != _edited_node:
 			_editor_selection.clear()
 			_editor_selection.add_node(_edited_node)
 			_show_river_control_panel()
-			_edited_node = selected[0] as RiverManager
+			_edited_node = selected[0] as WaterwaysRiver
 			_river_controls.menu.debug_view_menu_selected = _edited_node.debug_view
 			if not _edited_node.progress_notified.is_connected(_river_progress_notified):
 				_edited_node.progress_notified.connect(_river_progress_notified)
@@ -121,17 +104,17 @@ func _on_selection_change() -> void:
 
 	if len(selected) == 0:
 		return
-	if selected[0] is RiverManager:
+	if selected[0] is WaterwaysRiver:
 		_show_river_control_panel()
-		_edited_node = selected[0] as RiverManager
+		_edited_node = selected[0] as WaterwaysRiver
 		_river_controls.menu.debug_view_menu_selected = _edited_node.debug_view
 		if not _edited_node.progress_notified.is_connected(_river_progress_notified):
 			_edited_node.progress_notified.connect(_river_progress_notified)
-	elif selected[0] is WaterfallManager:
-		_edited_node = selected[0] as WaterfallManager
-	elif selected[0] is WaterSystem:
+	elif selected[0] is WaterwaysWaterfall:
+		_edited_node = selected[0] as WaterwaysWaterfall
+	elif selected[0] is WaterwaysSystemManager:
 		_show_water_system_control_panel()
-		_edited_node = selected[0] as WaterSystem
+		_edited_node = selected[0] as WaterwaysSystemManager
 	else:
 		_edited_node = null
 
@@ -167,9 +150,9 @@ func _forward_3d_gui_input(camera: Camera3D, event: InputEvent) -> int:
 	if not _edited_node:
 		return AFTER_GUI_INPUT_PASS
 
-	if _edited_node is RiverManager:
+	if _edited_node is WaterwaysRiver:
 		return _forward_3d_gui_input_river(camera, event)
-	elif _edited_node is WaterfallManager:
+	elif _edited_node is WaterwaysWaterfall:
 		return AFTER_GUI_INPUT_PASS
 
 	return AFTER_GUI_INPUT_PASS
@@ -247,7 +230,7 @@ func _forward_3d_gui_input_river(camera: Camera3D, event: InputEvent) -> int:
 
 				var plane := Plane(end_pos_global, end_pos_global + camera.transform.basis.x, end_pos_global + camera.transform.basis.y)
 				var new_pos
-				if constraint == RiverControls.CONSTRAINTS.COLLIDERS:
+				if constraint == WaterwaysRiverControls.CONSTRAINTS.COLLIDERS:
 					var space_state = _edited_node.get_world_3d().direct_space_state
 					var ray_params = PhysicsRayQueryParameters3D.create(ray_from, ray_from + ray_dir * 4096)
 					var result = space_state.intersect_ray(ray_params)
@@ -255,21 +238,21 @@ func _forward_3d_gui_input_river(camera: Camera3D, event: InputEvent) -> int:
 						new_pos = result.position
 					else:
 						return AFTER_GUI_INPUT_PASS
-				elif constraint == RiverControls.CONSTRAINTS.NONE:
+				elif constraint == WaterwaysRiverControls.CONSTRAINTS.NONE:
 					new_pos = plane.intersects_ray(ray_from, ray_from + ray_dir * 4096)
 
-				elif constraint in RiverGizmo.AXIS_MAPPING:
-					var axis: Vector3 = RiverGizmo.AXIS_MAPPING[constraint]
+				elif constraint in WaterwaysRiverGizmo.AXIS_MAPPING:
+					var axis: Vector3 = WaterwaysRiverGizmo.AXIS_MAPPING[constraint]
 					if local_editing:
 						axis = _handle_base_transform.basis * (axis)
-					var axis_from = end_pos_global + (axis * RiverGizmo.AXIS_CONSTRAINT_LENGTH)
-					var axis_to = end_pos_global - (axis * RiverGizmo.AXIS_CONSTRAINT_LENGTH)
-					var ray_to = ray_from + (ray_dir * RiverGizmo.AXIS_CONSTRAINT_LENGTH)
+					var axis_from = end_pos_global + (axis * WaterwaysRiverGizmo.AXIS_CONSTRAINT_LENGTH)
+					var axis_to = end_pos_global - (axis * WaterwaysRiverGizmo.AXIS_CONSTRAINT_LENGTH)
+					var ray_to = ray_from + (ray_dir * WaterwaysRiverGizmo.AXIS_CONSTRAINT_LENGTH)
 					var result = Geometry3D.get_closest_points_between_segments(axis_from, axis_to, ray_from, ray_to)
 					new_pos = result[0]
 
-				elif constraint in RiverGizmo.PLANE_MAPPING:
-					var normal: Vector3 = RiverGizmo.PLANE_MAPPING[constraint]
+				elif constraint in WaterwaysRiverGizmo.PLANE_MAPPING:
+					var normal: Vector3 = WaterwaysRiverGizmo.PLANE_MAPPING[constraint]
 					if local_editing:
 						normal = _handle_base_transform.basis * (normal)
 					var projected : Vector3 = end_pos_global.project(normal)
@@ -320,7 +303,7 @@ func _forward_3d_gui_input_river(camera: Camera3D, event: InputEvent) -> int:
 				ur.commit_action()
 		return AFTER_GUI_INPUT_STOP
 
-	elif _edited_node is RiverManager:
+	elif _edited_node is WaterwaysRiver:
 		# Forward input to river controls. This is cleaner than handling
 		# the keybindings here as the keybindings need to interact with
 		# the buttons. Handling it here would expose more private details

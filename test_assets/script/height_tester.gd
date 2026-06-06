@@ -1,11 +1,10 @@
 @tool
 extends MeshInstance3D
 
-const WaterSystem = preload("res://addons/waterways/water_system_manager.gd")
 
 @export var water_system_group_name : String = "waterways_system"
 
-var _system : WaterSystem
+var _system : WaterwaysSystemManager
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
@@ -16,8 +15,8 @@ func _ready():
 func _process(delta):
 	var systems = get_tree().get_nodes_in_group(water_system_group_name)
 	if systems.size() > 0:
-		if systems[0] is WaterSystem:
-			_system = systems[0] as WaterSystem
+		if systems[0] is WaterwaysSystemManager:
+			_system = systems[0] as WaterwaysSystemManager
 	
 	var altitude = _system.get_water_altitude(global_transform.origin)
 	#print(altitude)
