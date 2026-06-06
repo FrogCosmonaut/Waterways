@@ -89,105 +89,86 @@ const DEFAULT_PARAMETERS = {
 
 
 # Shape Properties
-var shape_step_length_divs : int = 1: set = set_step_length_divs
-var shape_step_width_divs : int = 1: set = set_step_width_divs
-var shape_smoothness : float = 0.5: set = set_smoothness
-	
-# Material Properties that not handled in shader
-var mat_shader_type : SHADER_TYPES: set = set_shader_type
-var mat_custom_shader : Shader: set = set_custom_shader
+@export_group("Shape")
+## How many subdivisions the river has per step along its length.
+@export_range(1, 8) var shape_step_length_divs: int = 1: set = set_step_length_divs
+## How many subdivisions the river has along its width.
+@export_range(1, 8) var shape_step_width_divs: int = 1: set = set_step_width_divs
+## How much the shape of the river is relaxed to even out corners.
+@export_range(0.1, 5.0) var shape_smoothness: float = 0.5: set = set_smoothness
+
+# Material properties not handled inside the shader. These stay in
+# _get_property_list() because the per-shader uniforms below them are injected
+# dynamically and can't be declared as @export.
+@export_group("Material")
+@export var mat_shader: WaterwaysRiverShader = DEFAULT_WATER_SHADER: set = set_shader
 
 # LOD Properties
-var lod_lod0_distance : float = 50.0: set = set_lod0_distance
+@export_group("Lod")
+## Cutoff distance for whether the shader samples textures twice to create a
+## fractal (FBM) effect for the waves and foam.
+@export_range(5.0, 200.0) var lod_lod0_distance: float = 50.0: set = set_lod0_distance
 
 # Bake Properties
-var baking_resolution : int = 2
-var baking_raycast_distance : float = 10.0
-var baking_raycast_layers : int = 1
-var baking_dilate : float = 0.6
-var baking_flowmap_blur : float = 0.04
-var baking_foam_cutoff : float = 0.9
-var baking_foam_offset : float = 0.1
-var baking_foam_blur : float = 0.02
-@export var baking_half_res_collision : bool = false
+@export_group("Baking")
+## Resolution of the baked flow and foam map. It does not need to be large to
+## look good, and baking time grows fast, so only increase it if you need to.
+@export var baking_resolution := WaterwaysConstants.BakeResolution._256
+## Raycast the collision map at half resolution and upscale it. Roughly 4x fewer
+## raycasts for a small precision loss (the map is dilated and blurred anyway).
+@export var baking_half_res_collision: bool = false
+## Length of the raycasts used to detect colliders from the river surface.
+@export_range(0.0, 100.0) var baking_raycast_distance: float = 10.0
+## Physics layers used for the collision raycasts.
+@export_flags_3d_physics var baking_raycast_layers: int = 1
+## Amount of dilation used to convert the collision map into a distance field.
+## This generally should not need adjusting.
+@export_range(0.0, 1.0) var baking_dilate: float = 0.6
+## How much the flowmap is blurred to clean up seams or artifacts.
+@export_range(0.0, 1.0) var baking_flowmap_blur: float = 0.04
+## How much of the distance field is cut off to generate the foam mask. Higher
+## values make the foam mask tighter around the collisions.
+@export_range(0.0, 1.0) var baking_foam_cutoff: float = 0.9
+## How far the foam stretches along the flow direction.
+@export_range(0.0, 1.0) var baking_foam_offset: float = 0.1
+## How much the foam mask is blurred.
+@export_range(0.0, 1.0) var baking_foam_blur: float = 0.02
 
 # Public variables
-var curve : Curve3D
-var widths : Array[float] = [1.0, 1.0]: set = set_widths
-var valid_flowmap := false
-var debug_view : int = 0: set = set_debug_view
-var mesh_instance : MeshInstance3D
-var flow_foam_noise : Texture2D
-var dist_pressure : Texture2D
+@export_storage var curve: Curve3D
+@export_storage var widths: Array[float] = [1.0, 1.0]: set = set_widths
+@export_storage var valid_flowmap: bool = false
+var debug_view: int = 0: set = set_debug_view
+var mesh_instance: MeshInstance3D
+@export_storage var flow_foam_noise: Texture2D
+@export_storage var dist_pressure: Texture2D
 
 # Private variables
-var _steps : int = 2
-var _st : SurfaceTool
-var _mdt : MeshDataTool
-var _debug_material : ShaderMaterial
+var _steps: int = 2
+var _st: SurfaceTool
+var _mdt: MeshDataTool
+var _debug_material: ShaderMaterial
 var _first_enter_tree := true
-var _filter_renderer : PackedScene
+var _filter_renderer: PackedScene
+var _defaults: WaterwaysRiver
+
 # Serialised private variables
-var _material : ShaderMaterial
-var _selected_shader : int = SHADER_TYPES.WATER
-var _uv2_sides : int
+@export_storage var _material: ShaderMaterial
+@export_storage var _uv2_sides: int
 
 
 # Internal Methods
 func _get_property_list() -> Array:
 	var props = [
 		{
-			name = "Shape",
-			type = TYPE_NIL,
-			hint_string = "shape_",
-			usage = PROPERTY_USAGE_GROUP | PROPERTY_USAGE_SCRIPT_VARIABLE
-		},
-		{
-			name = "shape_step_length_divs",
-			type = TYPE_INT,
-			hint = PROPERTY_HINT_RANGE,
-			hint_string = "1, 8",
-			usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE
-		},
-		{
-			name = "shape_step_width_divs",
-			type = TYPE_INT,
-			hint = PROPERTY_HINT_RANGE,
-			hint_string = "1, 8",
-			usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE
-		},
-		{
-			name = "shape_smoothness",
-			type = TYPE_FLOAT,
-			hint = PROPERTY_HINT_RANGE,
-			hint_string = "0.1, 5.0",
-			usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE
-		},
-		{
 			name = "Material",
 			type = TYPE_NIL,
 			hint_string = "mat_",
 			usage = PROPERTY_USAGE_GROUP | PROPERTY_USAGE_SCRIPT_VARIABLE
 		},
-		{
-			name = "mat_shader_type",
-			type = TYPE_INT,
-			hint = PROPERTY_HINT_ENUM,
-			hint_string = "Water, Lava, Custom",
-			usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE
-		},
-		{
-			name = "mat_custom_shader",
-			type = TYPE_OBJECT,
-			hint = PROPERTY_HINT_RESOURCE_TYPE,
-			usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE,
-			hint_string = "Shader"
-		},
 	]
-
-	var props2 = []
 	var mat_categories = MATERIAL_CATEGORIES.duplicate(true)
-	
+
 	if _material.shader != null:
 		var shader_params := RenderingServer.get_shader_parameter_list(_material.shader.get_rid())
 		for p in shader_params:
@@ -196,7 +177,7 @@ func _get_property_list() -> Array:
 			var hit_category = null
 			for category in mat_categories:
 				if p.name.begins_with(category):
-					props2.append({
+					props.append({
 						name = str("Material/", mat_categories[category]),
 						type = TYPE_NIL,
 						hint_string = str("mat_", category),
@@ -213,129 +194,9 @@ func _get_property_list() -> Array:
 			if "curve" in cp.name:
 				cp.hint = PROPERTY_HINT_EXP_EASING
 				cp.hint_string = "EASE"
-			props2.append(cp)
-	var props3 = [
-		{
-			name = "Lod",
-			type = TYPE_NIL,
-			hint_string = "lod_",
-			usage = PROPERTY_USAGE_GROUP | PROPERTY_USAGE_SCRIPT_VARIABLE
-		},
-		{
-			name = "lod_lod0_distance",
-			type = TYPE_FLOAT,
-			hint = PROPERTY_HINT_RANGE,
-			hint_string = "5.0, 200.0",
-			usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE
-		},
-		{
-			name = "Baking",
-			type = TYPE_NIL,
-			hint_string = "baking_",
-			usage = PROPERTY_USAGE_GROUP | PROPERTY_USAGE_SCRIPT_VARIABLE
-		},
-		{
-			name = "baking_resolution",
-			type = TYPE_INT,
-			hint = PROPERTY_HINT_ENUM,
-			hint_string = "64, 128, 256, 512, 1024",
-			usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE
-		},
-		{
-			name = "baking_raycast_distance",
-			type = TYPE_FLOAT,
-			hint = PROPERTY_HINT_RANGE,
-			hint_string = "0.0, 100.0",
-			usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE
-		},		
-		{
-			name = "baking_raycast_layers",
-			type = TYPE_INT,
-			hint = PROPERTY_HINT_LAYERS_3D_PHYSICS,
-			usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE
-		},
-		{
-			name = "baking_dilate",
-			type = TYPE_FLOAT,
-			hint = PROPERTY_HINT_RANGE,
-			hint_string = "0.0, 1.0",
-			usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE
-		},
-		{
-			name = "baking_flowmap_blur",
-			type = TYPE_FLOAT,
-			hint = PROPERTY_HINT_RANGE,
-			hint_string = "0.0, 1.0",
-			usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE
-		},
-		{
-			name = "baking_foam_cutoff",
-			type = TYPE_FLOAT,
-			hint = PROPERTY_HINT_RANGE,
-			hint_string = "0.0, 1.0",
-			usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE
-		},
-		{
-			name = "baking_foam_offset",
-			type = TYPE_FLOAT,
-			hint = PROPERTY_HINT_RANGE,
-			hint_string = "0.0, 1.0",
-			usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE
-		},
-		{
-			name = "baking_foam_blur",
-			type = TYPE_FLOAT,
-			hint = PROPERTY_HINT_RANGE,
-			hint_string = "0.0, 1.0",
-			usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE
-		},
-		# Serialize these values without exposing it in the inspector
-		{
-			name = "curve",
-			type = TYPE_OBJECT,
-			usage = PROPERTY_USAGE_STORAGE
-		},
-		{
-			name = "widths",
-			type = TYPE_ARRAY,
-			usage = PROPERTY_USAGE_STORAGE
-		},
-		{
-			name = "valid_flowmap",
-			type = TYPE_BOOL,
-			usage = PROPERTY_USAGE_STORAGE
-		},
-		{
-			name = "flow_foam_noise",
-			type = TYPE_OBJECT,
-			usage = PROPERTY_USAGE_STORAGE
-		},
-		{
-			name = "dist_pressure",
-			type = TYPE_OBJECT,
-			usage = PROPERTY_USAGE_STORAGE
-		},
-		{
-			name = "_material",
-			type = TYPE_OBJECT,
-			hint = PROPERTY_HINT_RESOURCE_TYPE,
-			hint_string = "ShaderMaterial",
-			usage = PROPERTY_USAGE_STORAGE
-		},
-		{
-			name = "_selected_shader",
-			type = TYPE_INT,
-			usage = PROPERTY_USAGE_STORAGE
-		},
-		{
-			name = "_uv2_sides",
-			type = TYPE_INT,
-			usage = PROPERTY_USAGE_STORAGE
-		}
-	]
-	var combined_props = props + props2 + props3
-	
-	return combined_props
+			props.append(cp)
+
+	return props
 
 
 func _set(property: StringName, value) -> bool:
@@ -461,7 +322,7 @@ func remove_point(index: int) -> void:
 
 func bake_texture() -> void:
 	_generate_river()
-	_generate_flowmap(pow(2, 6 + baking_resolution))
+	_generate_flowmap(baking_resolution)
 
 
 func set_curve_point_position(index: int, position: Vector3) -> void:

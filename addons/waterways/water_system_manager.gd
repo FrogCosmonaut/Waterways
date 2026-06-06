@@ -8,19 +8,44 @@ extends Node3D
 const SYSTEM_MAP_RENDERER_SCENE: PackedScene = preload("./system_map_renderer.tscn")
 const FILTER_RENDERER_SCENE: PackedScene = preload("./filter_renderer.tscn")
 
-var system_map: ImageTexture = null: set = set_system_map
-var system_bake_resolution := 2
-var system_group_name := "waterways_system"
-var minimum_water_level := 0.0
+## The baked system maps texture.
+@export var system_map: ImageTexture = null: set = set_system_map
+## The resolution of the system maps.
+@export var system_bake_resolution := WaterwaysConstants.BakeResolution._512
+## This group name is assigned at runtime, it is used by the [WaterwaysBuoyant] node to find the [WaterwaysSystem].
+## If you only have one [WaterwaysSystem], you can just leave this be.
+@export var system_group_name: StringName = &"waterways_system"
+## This is the value returned when an object queries the [WaterwaysSystem] heightmap,
+## but hits outside the baked height data.
+@export var minimum_water_level: float = 0.0
 
-# Auto assign
-var wet_group_name := "waterways_wet"
-var surface_index := -1
-var material_override := false
+@export_group("Auto assign texture & coordinates on generate")
+## This name will be used to find any [MeshInstance3D]s that should have the maps assigned
+@export var wet_group_name: StringName = &"waterways_wet"
+## The surface index the material you want to send the maps to is set on the [MeshInstance3D], -1 means disabled.
+@export var surface_index: int = -1
+## If the material is instead set as a [code]Material Override[/code], check this box for the maps to be assigned there.
+@export var material_override: bool = false
 
-var _system_aabb: AABB
-var _system_img: Image
-var _first_enter_tree := true
+@export_storage var _system_aabb: AABB:
+	set(value):
+		_system_aabb = value
+		# Avoid get_longest_axis_size() twice every physics frame per Buoyant.
+		if value.size != Vector3.ZERO:
+			_system_aabb_longest_axis_size = value.get_longest_axis_size()
+
+var _system_img: Image:
+	set(value):
+		_system_img = value
+		if value:
+			_system_img_size = value.get_width()
+
+var _first_enter_tree: bool = true
+
+# Cached longest_axis_size. Updated only when _system_aab is changed.
+var _system_aabb_longest_axis_size: float
+# Cached _system_img size. Updated only when _system_image is changed.
+var _system_img_size: int
 
 
 func _enter_tree() -> void:
@@ -64,104 +89,57 @@ func _sample_system_map(query_pos: Vector3) -> Color:
 		return Color.BLACK
 	var point := Vector2i(pos_2d * _system_img_size)
 	return _system_img.get_pixelv(point)
-func _get_property_list() -> Array:
-	return [
-		{
-			name = "system_map",
-			type = TYPE_OBJECT,
-			hint = PROPERTY_HINT_RESOURCE_TYPE,
-			usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE,
-			hint_string = "Texture2D"
-		},
-		{
-			name = "system_bake_resolution",
-			type = TYPE_INT,
-			hint = PROPERTY_HINT_ENUM,
-			hint_string = "128, 256, 512, 1024, 2048",
-			usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE
-		},
-		{
-			name = "system_group_name",
-			type = TYPE_STRING,
-			usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE
-		},
-		{
-			name = "minimum_water_level",
-			type = TYPE_FLOAT,
-			usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE
-		},
-		{
-			name = "Auto assign texture & coordinates on generate",
-			type = TYPE_NIL,
-			usage = PROPERTY_USAGE_GROUP | PROPERTY_USAGE_SCRIPT_VARIABLE
-		},
-		{
-			name = "wet_group_name",
-			type = TYPE_STRING,
-			usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE
-		},
-		{
-			name = "surface_index",
-			type = TYPE_INT,
-			usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE
-		},
-		{
-			name = "material_override",
-			type = TYPE_BOOL,
-			usage = PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_SCRIPT_VARIABLE
-		},
-		# values that need to be serialized, but should not be exposed
-		{
-			name = "_system_aabb",
-			type = TYPE_AABB,
-			usage = PROPERTY_USAGE_STORAGE
-		}
-	]
 
 
 func generate_system_maps() -> void:
 	var rivers: Array[WaterwaysRiver]
-	
+
 	for child in get_children():
 		if child is WaterwaysRiver:
 			rivers.append(child)
-	
+
+	if rivers.is_empty():  # TODO: Maybe a Popup here could be neat.
+		push_warning("Cannot bake WaterwaysSystem map without rivers.")
+		return
+
 	# We need to make the aabb out of the first river, so we don't include 0,0
-	if rivers.size() > 0:
-		_system_aabb = rivers[0].get_transformed_aabb()
-	
-	for river in rivers:
+	_system_aabb = rivers[0].get_transformed_aabb()
+	for river in rivers.slice(1):
 		var river_aabb = river.get_transformed_aabb()
 		_system_aabb = _system_aabb.merge(river_aabb)
-	print(_system_aabb)
-	
+
 	var renderer: WaterwaysSystemMapRenderer = SYSTEM_MAP_RENDERER_SCENE.instantiate()
 	add_child(renderer)
-	var resolution := pow(2, system_bake_resolution + 7)
-	var flow_map: ImageTexture = await renderer.grab_flow(rivers, _system_aabb, resolution)
-	var height_map: ImageTexture = await renderer.grab_height(rivers, _system_aabb, resolution)
-	var alpha_map: ImageTexture = await renderer.grab_alpha(rivers, _system_aabb, resolution)
-	
+	var flow_map: ImageTexture = await renderer.grab_flow(rivers, _system_aabb, system_bake_resolution)
+	var height_map: ImageTexture = await renderer.grab_height(rivers, _system_aabb, system_bake_resolution)
+
+	# TODO: not used, check why.
+	#var alpha_map: ImageTexture = await renderer.grab_alpha(rivers, _system_aabb, system_bake_resolution)
+
 	remove_child(renderer)
-	
+
 	var filter_renderer: WaterwaysFilterRenderer = FILTER_RENDERER_SCENE.instantiate()
 	add_child(filter_renderer)
-	
+
 	system_map = await filter_renderer.apply_combine(flow_map, flow_map, height_map) as ImageTexture
 	system_map = WaterwaysHelperMethods.save_baked_texture(system_map, self, "system_map") as ImageTexture
 
 	remove_child(filter_renderer)
-	
+
 	# give the map and coordinates to all nodes in the wet_group
-	var wet_nodes = get_tree().get_nodes_in_group(wet_group_name)
+	var wet_nodes := get_tree().get_nodes_in_group(wet_group_name)
 	for node in wet_nodes:
-		var material
+		if node is not MeshInstance3D:
+			continue
+
+		var mesh_instance: MeshInstance3D = node as MeshInstance3D
+		var material: Material = null
 		if surface_index != -1:
-			if node.get_surface_override_material_count() > surface_index:
-				material = node.get_surface_override_material(surface_index)
+			if mesh_instance.get_surface_override_material_count() > surface_index:
+				material = mesh_instance.get_surface_override_material(surface_index)
 		if material_override:
-			material = node.material_override
-		
+			material = mesh_instance.material_override
+
 		if material != null:
 			material.set_shader_parameter("water_systemmap", system_map)
 			material.set_shader_parameter("water_systemmap_coords", get_system_map_coordinates())

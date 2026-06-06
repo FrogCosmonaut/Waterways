@@ -5,10 +5,19 @@
 class_name WaterwaysBuoyant
 extends Node3D
 
+## Used to find the [WaterwaysSystem] to get height and flow data, it should match the value in your [WaterwaysSystem].
 @export var water_system_group_name : StringName = &"waterways_system"
+## Amount of upwards force applied to the [RigidBody3D] when the Buoyant is under the water level.[br]
+## Rule of thumb: a [RigidBody3D] with ~1 kg mass needs roughly 30-35 to float near the surface..
+## Scale it with the mass (heavier body -> higher force). Too low and the body rests
+## at the bottom, too high and it gets pushed out of the water and bounces.
 @export var buoyancy_force: float = 5.0
+## Amount of torque force being added to the [RigidBody3D] to try and keep the object upright in the water.
 @export var up_correcting_force: float = 5.0
+## Force applied to the [RigidBody3D] based on the flow vectors from the [WaterwaysSystem].
 @export var flow_force: float = 50.0
+## Linear and angular damping applied while the body is submerged.[br]
+## Higher values make it settle faster and bob less.
 @export var water_resistance: float = 5.0
 
 var _rigid_body: RigidBody3D
