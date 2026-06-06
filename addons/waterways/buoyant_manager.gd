@@ -37,9 +37,10 @@ func _ready() -> void:
 
 
 func _get_configuration_warnings() -> PackedStringArray:
+	var warnings: PackedStringArray = []
 	if _rigid_body == null:
-		return ["Buoyant node must be a direct child of a RigidBody3D to function."]
-	return []
+		warnings.append("Buoyant node must be a direct child of a RigidBody3D to function.")
+	return warnings
 
 
 func _physics_process(_delta: float) -> void:

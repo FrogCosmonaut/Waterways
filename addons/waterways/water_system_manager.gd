@@ -29,21 +29,28 @@ func _enter_tree() -> void:
 	add_to_group(system_group_name)
 
 
+func _exit_tree() -> void:
+	remove_from_group(system_group_name)
+
+
 func _ready() -> void:
+	child_order_changed.connect(update_configuration_warnings)
 	if system_map != null:
 		_system_img = system_map.get_image()
 	else:
 		push_warning("No WaterwaysSystem map!")
 
 
-func _exit_tree() -> void:
-	remove_from_group("waterways_system")
-
-
 func _get_configuration_warnings() -> PackedStringArray:
+	var warnings: PackedStringArray = []
 	if system_map == null:
-		return ["No System Map is set. Select WaterwaysSystemManager -> Generate System Map to generate and assign one."]
-	return []
+		warnings.append("No System Map is set. Select WaterwaysSystem -> Generate System Map to generate and assign one.")
+	if get_child_count() == 0:
+		warnings.append("This Node needs at least one WaterwaysRiver to work.")
+	for child in get_children():
+		if child is not WaterwaysRiver:
+			warnings.append("Node '%s' is not a WaterwaysRiver." % child.name)
+	return warnings
 
 
 func _get_property_list() -> Array:
