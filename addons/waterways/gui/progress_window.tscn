@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://c2fbj6j2ds71r" path="res://addons/waterways/gui/progress_window.gd" id="1_xgojc"]
 
-[node name="Popup" type="PopupPanel" unique_id=811629039]
+[node name="WaterwaysProgressWindow" type="PopupPanel" unique_id=811629039]
 oversampling_override = 1.0
 title = "Test"
 position = Vector2i(426, 240)

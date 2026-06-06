@@ -7,6 +7,10 @@ extends Window
 @onready var _progress_bar: ProgressBar = %ProgressBar
 
 
+func _ready() -> void:
+	hide()
+
+
 func show_progress(message: String, progress: float) -> void:
 	title = message
 	_progress_bar.value = progress
