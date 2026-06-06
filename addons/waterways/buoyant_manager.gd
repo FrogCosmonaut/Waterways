@@ -12,7 +12,7 @@ extends Node3D
 @export var water_resistance: float = 5.0
 
 var _rigid_body: RigidBody3D
-var _system: WaterwaysSystemManager
+var _system: WaterwaysSystem
 var _default_linear_damp: float = -1.0
 var _default_angular_damp: float = -1.0
 
@@ -32,8 +32,8 @@ func _exit_tree() -> void:
 func _ready() -> void:
 	var systems = get_tree().get_nodes_in_group(water_system_group_name)
 	if systems.size() > 0:
-		if systems[0] is WaterwaysSystemManager:
-			_system = systems[0] as WaterwaysSystemManager
+		if systems[0] is WaterwaysSystem:
+			_system = systems[0] as WaterwaysSystem
 
 
 func _get_configuration_warnings() -> PackedStringArray:

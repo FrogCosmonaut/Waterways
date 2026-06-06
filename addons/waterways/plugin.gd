@@ -14,9 +14,8 @@ var gradient_inspector: WaterwaysInspectorPlugin = WaterwaysInspectorPlugin.new(
 var _river_controls = RIVER_CONTROLS_SCENE.instantiate()
 var _water_system_controls = WATER_SYSTEM_CONTROLS_SCENE.instantiate()
 var _edited_node = null
-var _progress_window = null
+var _progress_window: WaterwaysProgressWindow = null
 var _editor_selection : EditorSelection = null
-var _heightmap_renderer = null
 var _mode := WaterwaysRiverControls.Mode.SELECT
 var constraint: int = WaterwaysRiverControls.CONSTRAINTS.NONE
 var local_editing := false
@@ -69,7 +68,7 @@ func _exit_tree() -> void:
 
 
 func _handles(node):
-	return node is WaterwaysRiver or node is WaterwaysWaterfall or node is WaterwaysSystemManager
+	return node is WaterwaysRiver or node is WaterwaysWaterfall or node is WaterwaysSystem
 
 
 # TODO - I think this was commented out for 4.0 conversion and isn't needed anymore
@@ -78,9 +77,9 @@ func _handles(node):
 #	if node is WaterwaysRiver:
 #		_show_river_control_panel()
 #		_edited_node = node as WaterwaysRiver
-#	if node is WaterwaysSystemManager:
+#	if node is WaterwaysSystem:
 #		_show_water_system_control_panel()
-#		_edited_node = node as WaterwaysSystemManager
+#		_edited_node = node as WaterwaysSystem
 
 
 func _on_selection_change() -> void:
@@ -112,9 +111,9 @@ func _on_selection_change() -> void:
 			_edited_node.progress_notified.connect(_river_progress_notified)
 	elif selected[0] is WaterwaysWaterfall:
 		_edited_node = selected[0] as WaterwaysWaterfall
-	elif selected[0] is WaterwaysSystemManager:
+	elif selected[0] is WaterwaysSystem:
 		_show_water_system_control_panel()
-		_edited_node = selected[0] as WaterwaysSystemManager
+		_edited_node = selected[0] as WaterwaysSystem
 	else:
 		_edited_node = null
 

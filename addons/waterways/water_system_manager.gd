@@ -2,7 +2,7 @@
 # See `LICENSE.md` included in the source distribution for details.
 @tool
 @icon("./icons/system.svg")
-class_name WaterwaysSystemManager
+class_name WaterwaysSystem
 extends Node3D
 
 const SYSTEM_MAP_RENDERER_SCENE: PackedScene = preload("./system_map_renderer.tscn")
@@ -33,7 +33,7 @@ func _ready() -> void:
 	if system_map != null:
 		_system_img = system_map.get_image()
 	else:
-		push_warning("No WaterwaysSystemManager map!")
+		push_warning("No WaterwaysSystem map!")
 
 
 func _exit_tree() -> void:
@@ -202,7 +202,7 @@ func get_system_map_coordinates() -> Transform3D:
 	return offset
 
 
-func set_system_map(texture : ImageTexture) -> void:
+func set_system_map(texture: ImageTexture) -> void:
 	system_map = texture
 	if _first_enter_tree:
 		return

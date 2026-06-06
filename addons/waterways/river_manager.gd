@@ -5,6 +5,13 @@
 class_name WaterwaysRiver
 extends Node3D
 
+# river_changed used to update handles when values are changed on script side
+# progress_notified used to up progress bar when baking maps
+# albedo_set is needed since the gradient is a custom inspector that needs a signal to update from script side
+signal river_changed
+signal progress_notified
+#signal albedo_set
+
 
 const FILTER_RENDERER_PATH = "res://addons/waterways/filter_renderer.tscn"
 const FLOW_OFFSET_NOISE_TEXTURE_PATH = "res://addons/waterways/textures/flow_offset_noise.png"
@@ -125,12 +132,6 @@ var _material : ShaderMaterial
 var _selected_shader : int = SHADER_TYPES.WATER
 var _uv2_sides : int
 
-# river_changed used to update handles when values are changed on script side
-# progress_notified used to up progress bar when baking maps
-# albedo_set is needed since the gradient is a custom inspector that needs a signal to update from script side
-signal river_changed
-signal progress_notified
-#signal albedo_set
 
 # Internal Methods
 func _get_property_list() -> Array:
@@ -340,21 +341,21 @@ func _get_property_list() -> Array:
 func _set(property: StringName, value) -> bool:
 	if str(property).begins_with("mat_"):
 		# TODO, is there a better way to do this, now that right() has changed?
-		var param_name : String = str(property).replace("mat_", "")
+		var param_name: String = str(property).replace("mat_", "")
 		_material.set_shader_parameter(param_name, value)
 		return true
 	return false
 
 
-func _get(property : StringName):
+func _get(property: StringName):
 	if str(property).begins_with("mat_"):
-		var param_name : String = str(property).replace("mat_", "")
+		var param_name: String = str(property).replace("mat_", "")
 		return _material.get_shader_parameter(param_name)
 
 
 func _property_can_revert(property : StringName) -> bool:
 	if str(property).begins_with("mat_"):
-		var param_name : String = str(property).replace("mat_", "")
+		var param_name: String = str(property).replace("mat_", "")
 		return _material.property_can_revert(str("shader_parameter/", param_name))
 
 	if not DEFAULT_PARAMETERS.has(property):
@@ -366,7 +367,7 @@ func _property_can_revert(property : StringName) -> bool:
 
 func _property_get_revert(property : StringName):
 	if str(property).begins_with("mat_"):
-		var param_name : String = str(property).replace("mat_", "")
+		var param_name: String = str(property).replace("mat_", "")
 		var revert_value = _material.property_get_revert(str("shader_parameter/", param_name))
 		return revert_value
 	
@@ -431,16 +432,16 @@ func get_transformed_aabb() -> AABB:
 
 
 # Public Methods - These should all be good to use as API from other scripts
-func add_point(position : Vector3, index : int, dir : Vector3 = Vector3.ZERO, width : float = 0.0) -> void:
+func add_point(position: Vector3, index: int, dir: Vector3 = Vector3.ZERO, width: float = 0.0) -> void:
 	if index == -1:
-		var last_index : int = curve.get_point_count() - 1
-		var dist : float = position.distance_to(curve.get_point_position(last_index))
-		var new_dir : Vector3 = dir if dir != Vector3.ZERO else (position - curve.get_point_position(last_index) - curve.get_point_out(last_index) ).normalized() * 0.25 * dist
+		var last_index: int = curve.get_point_count() - 1
+		var dist: float = position.distance_to(curve.get_point_position(last_index))
+		var new_dir: Vector3 = dir if dir != Vector3.ZERO else (position - curve.get_point_position(last_index) - curve.get_point_out(last_index) ).normalized() * 0.25 * dist
 		curve.add_point(position, -new_dir, new_dir, -1)
 		widths.append(widths[widths.size() - 1]) # If this is a new point at the end, add a width that's the same as last
 	else:
 		var dist = curve.get_point_position(index).distance_to(curve.get_point_position(index + 1))
-		var new_dir : Vector3 = dir if dir != Vector3.ZERO else (curve.get_point_position(index + 1) - curve.get_point_position(index)).normalized() * 0.25 * dist
+		var new_dir: Vector3 = dir if dir != Vector3.ZERO else (curve.get_point_position(index + 1) - curve.get_point_position(index)).normalized() * 0.25 * dist
 		curve.add_point(position, -new_dir, new_dir, index + 1)
 		var new_width = width if width != 0.0 else (widths[index] + widths[index + 1]) / 2.0
 		widths.insert(index + 1, new_width) # We set the width to the average of the two surrounding widths
@@ -448,7 +449,7 @@ func add_point(position : Vector3, index : int, dir : Vector3 = Vector3.ZERO, wi
 	_generate_river()
 
 
-func remove_point(index : int) -> void:
+func remove_point(index: int) -> void:
 	# We don't allow rivers shorter than 2 points
 	if curve.get_point_count() <= 2:
 		return
@@ -463,34 +464,34 @@ func bake_texture() -> void:
 	_generate_flowmap(pow(2, 6 + baking_resolution))
 
 
-func set_curve_point_position(index : int, position : Vector3) -> void:
+func set_curve_point_position(index: int, position: Vector3) -> void:
 	curve.set_point_position(index, position)
 	_generate_river()
 
 
-func set_curve_point_in(index : int, position : Vector3) -> void:
+func set_curve_point_in(index: int, position: Vector3) -> void:
 	curve.set_point_in(index, position)
 	_generate_river()
 
 
-func set_curve_point_out(index : int, position : Vector3) -> void:
+func set_curve_point_out(index: int, position: Vector3) -> void:
 	curve.set_point_out(index, position)
 	_generate_river()
 
 
-func set_widths(new_widths) -> void:
+func set_widths(new_widths: Array[float]) -> void:
 	widths = new_widths
 	if _first_enter_tree:
 		return
 	_generate_river()
 
 
-func set_materials(param : String, value) -> void:
+func set_materials(param: String, value) -> void:
 	_material.set_shader_parameter(param, value)
 	_debug_material.set_shader_parameter(param, value)
 
 
-func set_debug_view(index : int) -> void:
+func set_debug_view(index: int) -> void:
 	debug_view = index
 	if index == 0:
 		mesh_instance.material_override = null
@@ -511,16 +512,16 @@ func spawn_mesh() -> void:
 
 
 func get_curve_points() -> PackedVector3Array:
-	var points : PackedVector3Array
+	var points: PackedVector3Array
 	for p in curve.get_point_count():
 		points.append(curve.get_point_position(p))
 	
 	return points
 
 
-func get_closest_point_to(point : Vector3) -> int:
+func get_closest_point_to(point: Vector3) -> int:
 	var closest_distance := 4096.0
-	var closest_index
+	var closest_index: int = -1
 	for p in curve.get_point_count():
 		var dist := point.distance_to(curve.get_point_position(p))
 		if dist < closest_distance:
@@ -530,11 +531,10 @@ func get_closest_point_to(point : Vector3) -> int:
 	return closest_index
 
 
-func get_shader_parameter(param : String):
+func get_shader_parameter(param: String):
 	return _material.get_shader_parameter(param)
 
 
-# Parameter Setters
 func set_step_length_divs(value : int) -> void:
 	shape_step_length_divs = value
 	if _first_enter_tree:
@@ -545,7 +545,8 @@ func set_step_length_divs(value : int) -> void:
 	river_changed.emit()
 
 
-func set_step_width_divs(value : int) -> void:
+# Parameter Setters
+func set_step_length_divs(value: int) -> void:
 	shape_step_width_divs = value
 	if _first_enter_tree:
 		return
@@ -555,7 +556,7 @@ func set_step_width_divs(value : int) -> void:
 	river_changed.emit()
 
 
-func set_smoothness(value : float) -> void:
+func set_smoothness(value: float) -> void:
 	shape_smoothness = value
 	if _first_enter_tree:
 		return
@@ -601,14 +602,21 @@ func set_custom_shader(shader : Shader) -> void:
 		set_shader_type(SHADER_TYPES.WATER)
 
 
-func set_lod0_distance(value : float) -> void:
+func set_lod0_distance(value: float) -> void:
 	lod_lod0_distance = value
 	set_materials("i_lod0_distance", value)
 
 
-# Private Methods
+#region Private Methods
+
+## Emits the bake progress signal and yields a frame so the progressbar shows correctly.
+func _notify_progress(percentage: float, message: String) -> void:
+	progress_notified.emit(percentage, message)
+	await get_tree().process_frame
+
+
 func _generate_river() -> void:
-	var average_width := WaterwaysHelperMethods.sum_array(widths) / float(widths.size() / 2)
+	var average_width := WaterwaysHelperMethods.sum_array(widths) / (float(widths.size()) / 2.0)
 	_steps = int( max(1.0, round(curve.get_baked_length() / average_width)) )
 	
 	var river_width_values := WaterwaysHelperMethods.generate_river_width_values(curve, _steps, shape_step_length_divs, shape_step_width_divs, widths)
@@ -616,19 +624,19 @@ func _generate_river() -> void:
 	mesh_instance.mesh.surface_set_material(0, _material)
 
 
-func _generate_flowmap(flowmap_resolution : float) -> void:
+func _generate_flowmap(flowmap_resolution: int) -> void:
 	# Progress budget: collision positions emit 0 to 45% (see generate_collision_positions),
 	# raycasts continue 45 to 90, filters ssends a 90, finished at 100.
 	const RAYCAST_PROGRESS_BASE: float = 45.0
 	const RAYCAST_PROGRESS_END: float = 90.0
+	var res := flowmap_resolution
 
-	var res := int(flowmap_resolution)
 	# Optionally raycast collisions at half resolution and upscale; the collision
 	# map is dilated and blurred afterwards, so the precision loss is small.
 	var collision_res := res / 2 if baking_half_res_collision else res
 	var image := Image.create(collision_res, collision_res, true, Image.FORMAT_RGB8)
 	image.fill(Color.BLACK)
-	await notify_progress(0.0, "Calculating Collisions (%sx%s)" % [collision_res, collision_res])
+	await _notify_progress(0.0, "Calculating Collisions (%sx%s)" % [collision_res, collision_res])
 
 	var global_trans: Transform3D = mesh_instance.global_transform
 	var mesh_arrays: Array = mesh_instance.mesh.surface_get_arrays(0)
@@ -654,7 +662,7 @@ func _generate_flowmap(flowmap_resolution : float) -> void:
 	var last_yield := Time.get_ticks_msec()
 	for i in total:
 		if Time.get_ticks_msec() - last_yield > 16:
-			await notify_progress(
+			await _notify_progress(
 				RAYCAST_PROGRESS_BASE + (RAYCAST_PROGRESS_END - RAYCAST_PROGRESS_BASE) * float(i) / float(maxi(total, 1)),
 				"Raycasting (%sx%s)" % [res, res]
 			)
@@ -678,7 +686,7 @@ func _generate_flowmap(flowmap_resolution : float) -> void:
 
 		image.set_pixel(px.x, px.y, Color.WHITE)
 
-	await notify_progress(RAYCAST_PROGRESS_END, "Applying filters (%sx%s)" % [res, res])
+	await _notify_progress(RAYCAST_PROGRESS_END, "Applying filters (%sx%s)" % [res, res])
 
 	# Upscale the half-res collision map back to full resolution before filtering.
 	if collision_res != res:
@@ -715,6 +723,7 @@ func _generate_flowmap(flowmap_resolution : float) -> void:
 	var foam_offset_amount = baking_foam_offset / float(_uv2_sides)
 	var foam_blur_amount = baking_foam_blur / float(_uv2_sides) * flowmap_resolution
 
+	# TODO: do margin * 2 as (margin2 to save calculation time?)
 	var flow_pressure_map = await renderer_instance.apply_flow_pressure(collision_with_margins, flowmap_resolution, _uv2_sides + 2.0)
 	var blurred_flow_pressure_map = await renderer_instance.apply_vertical_blur(flow_pressure_map, flow_pressure_blur_amount, flowmap_resolution + margin * 2)
 	var dilated_texture = await renderer_instance.apply_dilate(collision_with_margins, dilate_amount, 0.0, flowmap_resolution + margin * 2)
@@ -744,14 +753,10 @@ func _generate_flowmap(flowmap_resolution : float) -> void:
 	set_materials("i_valid_flowmap", true)
 	set_materials("i_uv2_sides", _uv2_sides)
 	valid_flowmap = true
-	await notify_progress(100.0, "Finished")
+	await _notify_progress(100.0, "Finished")
 	update_configuration_warnings()
 
-
-## Emits the bake progress signal and yields a frame so the progressbar shows correctly.
-func notify_progress(percentage : float, message : String) -> void:
-	progress_notified.emit(percentage, message)
-	await get_tree().process_frame
+#endregion
 
 
 # Signal Methods
