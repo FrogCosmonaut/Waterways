@@ -27,7 +27,7 @@ var points := PackedVector3Array([Vector3(0.0, 4.0, 0.0), Vector3(0.0, 0.0, 1.0)
 	set(value):
 		points = value
 		_generate_waterfall()
-		emit_signal("waterfall_changed")
+		waterfall_changed.emit()
 var mesh_instance : MeshInstance3D
 
 var _st : SurfaceTool
@@ -46,14 +46,14 @@ func get_points() -> PackedVector3Array:
 func set_point(id: int, position: Vector3) -> void:
 	points[id] = position
 	_generate_waterfall()
-	emit_signal("waterfall_changed")
+	waterfall_changed.emit()
 
 
 func _configuration_changed() -> void:
 	print("_configuration changed")
 	# TODO - I assume we can pass a parameter about whether a re-gen is needed
 	_generate_waterfall()
-	emit_signal("waterfall_changed")
+	waterfall_changed.emit()
 
 
 func _enter_tree() -> void:
@@ -138,4 +138,4 @@ func ease_back_in(x: float) -> float:
 
 # Signal Methods
 func properties_changed() -> void:
-	emit_signal("waterfall_changed")
+	waterfall_changed.emit()

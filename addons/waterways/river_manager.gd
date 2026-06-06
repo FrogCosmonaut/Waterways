@@ -442,7 +442,7 @@ func add_point(position : Vector3, index : int, dir : Vector3 = Vector3.ZERO, wi
 		curve.add_point(position, -new_dir, new_dir, index + 1)
 		var new_width = width if width != 0.0 else (widths[index] + widths[index + 1]) / 2.0
 		widths.insert(index + 1, new_width) # We set the width to the average of the two surrounding widths
-	emit_signal("river_changed")
+	river_changed.emit()
 	_generate_river()
 
 
@@ -452,7 +452,7 @@ func remove_point(index : int) -> void:
 		return
 	curve.remove_point(index)
 	widths.remove_at(index)
-	emit_signal("river_changed")
+	river_changed.emit()
 	_generate_river()
 
 
@@ -540,7 +540,7 @@ func set_step_length_divs(value : int) -> void:
 	valid_flowmap = false
 	set_materials("i_valid_flowmap", valid_flowmap)
 	_generate_river()
-	emit_signal("river_changed")
+	river_changed.emit()
 
 
 func set_step_width_divs(value : int) -> void:
@@ -550,7 +550,7 @@ func set_step_width_divs(value : int) -> void:
 	valid_flowmap = false
 	set_materials("i_valid_flowmap", valid_flowmap)
 	_generate_river()
-	emit_signal("river_changed")
+	river_changed.emit()
 
 
 func set_smoothness(value : float) -> void:
@@ -560,7 +560,7 @@ func set_smoothness(value : float) -> void:
 	valid_flowmap = false
 	set_materials("i_valid_flowmap", valid_flowmap)
 	_generate_river()
-	emit_signal("river_changed")
+	river_changed.emit()
 
 
 func set_shader_type(type: int):
@@ -619,12 +619,12 @@ func _generate_flowmap(flowmap_resolution : float) -> void:
 	var image := Image.create(flowmap_resolution, flowmap_resolution, true, Image.FORMAT_RGB8)
 	image.fill(Color(0.0, 0.0, 0.0))
 	
-	emit_signal("progress_notified", 0.0, "Calculating Collisions (" + str(flowmap_resolution) + "x" + str(flowmap_resolution) + ")")
+	progress_notified.emit(0.0, "Calculating Collisions (%sx%s)" % [flowmap_resolution, flowmap_resolution])
 	await get_tree().process_frame
 	
 	image = await WaterHelperMethods.generate_collisionmap(image, mesh_instance, baking_raycast_distance, baking_raycast_layers, _steps, shape_step_length_divs, shape_step_width_divs, self)
 	
-	emit_signal("progress_notified", 0.95, "Applying filters (" + str(flowmap_resolution) + "x" + str(flowmap_resolution) + ")")
+	progress_notified.emit(95.0, "Applying filters (%sx%s)" % [flowmap_resolution, flowmap_resolution])
 	await get_tree().process_frame
 	
 	# Calculate how many columns are in UV2
@@ -691,10 +691,11 @@ func _generate_flowmap(flowmap_resolution : float) -> void:
 	set_materials("i_valid_flowmap", true)
 	set_materials("i_uv2_sides", _uv2_sides)
 	valid_flowmap = true
-	emit_signal("progress_notified", 100.0, "finished")
+	progress_notified.emit(100.0, "Finished")
+	await get_tree().process_frame
 	update_configuration_warnings()
 
 
 # Signal Methods
 func properties_changed() -> void:
-	emit_signal("river_changed")
+	river_changed.emit()

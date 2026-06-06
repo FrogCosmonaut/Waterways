@@ -24,8 +24,8 @@ var _edited_node = null
 var _progress_window = null
 var _editor_selection : EditorSelection = null
 var _heightmap_renderer = null
-var _mode := "select"
-var constraint: int = RiverControls.CONSTRAINTS.NONE
+var _mode := WaterwaysRiverControls.Mode.SELECT
+var constraint: int = WaterwaysRiverControls.CONSTRAINTS.NONE
 var local_editing := false
 var selection_locked := false
 
@@ -41,12 +41,12 @@ func _enter_tree() -> void:
 	add_inspector_plugin(gradient_inspector)
 	river_gizmo.editor_plugin = self
 	waterfall_gizmo.editor_plugin = self
-	_river_controls.connect("mode", Callable(self, "_on_mode_change"))
-	_river_controls.connect("options", Callable(self, "_on_option_change"))
+	_river_controls.mode_changed.connect(_on_river_controls_mode_changed)
+	_river_controls.options_changed.connect(_on_river_controls_options_changed)
 	_progress_window = ProgressWindow.instantiate()
 	_river_controls.add_child(_progress_window)
 	_editor_selection = get_editor_interface().get_selection()
-	_editor_selection.connect("selection_changed", Callable(self, "_on_selection_change"))
+	_editor_selection.selection_changed.connect(_on_selection_change)
 	scene_changed.connect(_on_scene_changed)
 	scene_closed.connect(_on_scene_closed)
 
@@ -76,11 +76,11 @@ func _exit_tree() -> void:
 	remove_node_3d_gizmo_plugin(river_gizmo)
 	remove_node_3d_gizmo_plugin(waterfall_gizmo)
 	remove_inspector_plugin(gradient_inspector)
-	_river_controls.disconnect("mode", Callable(self, "_on_mode_change"))
-	_river_controls.disconnect("options", Callable(self, "_on_option_change"))
-	_editor_selection.disconnect("selection_changed", Callable(self, "_on_selection_change"))
-	disconnect("scene_changed", Callable(self, "_on_scene_changed"));
-	disconnect("scene_closed", Callable(self, "_on_scene_closed"));
+	_river_controls.mode_changed.disconnect(_on_river_controls_mode_changed)
+	_river_controls.options.disconnect(_on_river_controls_options_changed)
+	_editor_selection.selection_changed.disconnect(_on_selection_change)
+	scene_changed.disconnect(_on_scene_changed)
+	scene_closed.disconnect(_on_scene_closed)
 	_hide_river_control_panel()
 	_hide_water_system_control_panel()
 
@@ -112,8 +112,8 @@ func _on_selection_change() -> void:
 			_show_river_control_panel()
 			_edited_node = selected[0] as RiverManager
 			_river_controls.menu.debug_view_menu_selected = _edited_node.debug_view
-			if not _edited_node.is_connected("progress_notified", Callable(self, "_river_progress_notified")):
-				_edited_node.connect("progress_notified", Callable(self, "_river_progress_notified"))
+			if not _edited_node.progress_notified.is_connected(_river_progress_notified):
+				_edited_node.progress_notified.connect(_river_progress_notified)
 			return
 
 	_hide_water_system_control_panel()
@@ -125,8 +125,8 @@ func _on_selection_change() -> void:
 		_show_river_control_panel()
 		_edited_node = selected[0] as RiverManager
 		_river_controls.menu.debug_view_menu_selected = _edited_node.debug_view
-		if not _edited_node.is_connected("progress_notified", Callable(self, "_river_progress_notified")):
-			_edited_node.connect("progress_notified", Callable(self, "_river_progress_notified"))
+		if not _edited_node.progress_notified.is_connected(_river_progress_notified):
+			_edited_node.progress_notified.connect(_river_progress_notified)
 	elif selected[0] is WaterfallManager:
 		_edited_node = selected[0] as WaterfallManager
 	elif selected[0] is WaterSystem:
@@ -146,20 +146,20 @@ func _on_scene_closed(_value) -> void:
 	_hide_water_system_control_panel()
 
 
-func _on_mode_change(mode) -> void:
-	_mode = mode
+func _on_river_controls_mode_changed(new_mode: WaterwaysRiverControls.Mode) -> void:
+	_mode = new_mode
 
 
-func _on_option_change(option, value) -> void:
-	if option == "constraint":
-		constraint = value
-		if constraint == RiverControls.CONSTRAINTS.COLLIDERS:
-			# WaterHelperMethods.reset_all_colliders(_edited_node.get_tree().root)
+func _on_river_controls_options_changed(option: WaterwaysRiverControls.Option, value) -> void:
+	if option == WaterwaysRiverControls.Option.CONSTRAINT:
+		constraint = value  # TODO: here is receiving either a bool or an int, check how to solve this.
+		if constraint == WaterwaysRiverControls.CONSTRAINTS.COLLIDERS:
+			# WaterwaysHelperMethods.reset_all_colliders(_edited_node.get_tree().root)
 			# TODO - figure out if this is needed any more
 			pass
-	elif option == "local_mode":
+	elif option == WaterwaysRiverControls.Option.LOCAL_MODE:
 		local_editing = value
-	elif option == "lock_selection":
+	elif option == WaterwaysRiverControls.Option.LOCK_SELECTION:
 		selection_locked = value
 
 
@@ -226,11 +226,11 @@ func _forward_3d_gui_input_river(camera: Camera3D, event: InputEvent) -> int:
 
 		# We'll use this closest point to add a point in between if on the line
 		# and to remove if close to a point
-		if _mode == "select":
+		if _mode == WaterwaysRiverControls.Mode.SELECT:
 			if not event.pressed:
 				river_gizmo.reset()
 			return AFTER_GUI_INPUT_PASS
-		if _mode == "add" and not event.pressed:
+		if _mode == WaterwaysRiverControls.Mode.ADD and not event.pressed:
 			# if we don't have a point on the line, we'll calculate a point
 			# based of a plane of the last point of the curve
 			if closest_segment == -1:
@@ -296,7 +296,7 @@ func _forward_3d_gui_input_river(camera: Camera3D, event: InputEvent) -> int:
 			ur.add_undo_property(_edited_node, "valid_flowmap", _edited_node.valid_flowmap)
 			ur.add_undo_method(_edited_node, "update_configuration_warnings")
 			ur.commit_action()
-		if _mode == "remove" and not event.pressed:
+		if _mode == WaterwaysRiverControls.Mode.REMOVE and not event.pressed:
 			# A closest_segment of -1 means we didn't press close enough to a
 			# point for it to be removed
 			if not closest_segment == -1:
@@ -345,17 +345,17 @@ func _river_progress_notified(progress : float, message : String) -> void:
 func _show_river_control_panel() -> void:
 	if not _river_controls.get_parent():
 		add_control_to_container(CONTAINER_SPATIAL_EDITOR_MENU, _river_controls)
-		_river_controls.menu.connect("generate_flowmap", Callable(self, "_on_generate_flowmap_pressed"))
-		_river_controls.menu.connect("generate_mesh", Callable(self, "_on_generate_mesh_pressed"))
-		_river_controls.menu.connect("debug_view_changed", Callable(self, "_on_debug_view_changed"))
+		_river_controls.menu.generate_flowmap.connect(_on_generate_flowmap_pressed)
+		_river_controls.menu.generate_mesh.connect(_on_generate_mesh_pressed)
+		_river_controls.menu.debug_view_changed.connect(_on_debug_view_changed)
 
 
 func _hide_river_control_panel() -> void:
 	if _river_controls.get_parent():
 		remove_control_from_container(CONTAINER_SPATIAL_EDITOR_MENU, _river_controls)
-		_river_controls.menu.disconnect("generate_flowmap", Callable(self, "_on_generate_flowmap_pressed"))
-		_river_controls.menu.disconnect("generate_mesh", Callable(self, "_on_generate_mesh_pressed"))
-		_river_controls.menu.disconnect("debug_view_changed", Callable(self, "_on_debug_view_changed"))
+		_river_controls.menu.generate_flowmap.disconnect(_on_generate_flowmap_pressed)
+		_river_controls.menu.generate_mesh.disconnect(_on_generate_mesh_pressed)
+		_river_controls.menu.debug_view_changed.disconnect(_on_debug_view_changed)
 
 		if _river_controls.lock_selection:
 			_river_controls.lock_selection.button_pressed = false
@@ -367,10 +367,10 @@ func _hide_river_control_panel() -> void:
 func _show_water_system_control_panel() -> void:
 	if not _water_system_controls.get_parent():
 		add_control_to_container(CONTAINER_SPATIAL_EDITOR_MENU, _water_system_controls)
-		_water_system_controls.menu.connect("generate_system_maps", Callable(self, "_on_generate_system_maps_pressed"))
+		_water_system_controls.menu.generate_system_maps.connect(_on_generate_system_maps_pressed)
 
 
 func _hide_water_system_control_panel() -> void:
 	if _water_system_controls.get_parent():
 		remove_control_from_container(CONTAINER_SPATIAL_EDITOR_MENU, _water_system_controls)
-		_water_system_controls.menu.disconnect("generate_system_maps", Callable(self, "_on_generate_system_maps_pressed"))
+		_water_system_controls.menu.generate_system_maps.disconnect(_on_generate_system_maps_pressed)

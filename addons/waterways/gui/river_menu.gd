@@ -20,36 +20,36 @@ var _debug_view_menu : PopupMenu
 
 func _enter_tree() -> void:
 	get_popup().clear()
-	get_popup().connect("id_pressed", Callable(self, "_menu_item_selected"))
+	get_popup().id_pressed.connect(_menu_item_selected)
 	get_popup().add_item("Generate Flow & Foam Map")
 	get_popup().add_item("Generate MeshInstance3D Sibling")
 	_debug_view_menu = PopupMenu.new()
 	_debug_view_menu.name = "DebugViewMenu"
-	_debug_view_menu.connect("about_to_popup", Callable(self, "_on_debug_view_menu_about_to_popup"))
-	_debug_view_menu.connect("id_pressed", Callable(self, "_debug_menu_item_selected"))
+	_debug_view_menu.about_to_popup.connect(_on_debug_view_menu_about_to_popup)
+	_debug_view_menu.id_pressed.connect(_debug_menu_item_selected)
 	get_popup().add_child(_debug_view_menu)
 	get_popup().add_submenu_item("Debug View", _debug_view_menu.name)
 
 
 func _exit_tree() -> void:
-	get_popup().disconnect("id_pressed", Callable(self, "_menu_item_selected"))
-	_debug_view_menu.disconnect("about_to_popup", Callable(self, "_on_debug_view_menu_about_to_popup"))
-	_debug_view_menu.disconnect("id_pressed", Callable(self, "_debug_menu_item_selected"))
+	get_popup().id_pressed.disconnect(_menu_item_selected)
+	_debug_view_menu.about_to_popup.disconnect(_on_debug_view_menu_about_to_popup)
+	_debug_view_menu.id_pressed.disconnect(_debug_menu_item_selected)
 
 
 func _menu_item_selected(index : int) -> void:
 	match index:
 		RIVER_MENU.GENERATE:
-			emit_signal("generate_flowmap")
+			generate_flowmap.emit()
 		RIVER_MENU.GENERATE_MESH:
-			emit_signal("generate_mesh")
+			generate_mesh.emit()
 		RIVER_MENU.DEBUG_VIEW_MENU:
 			pass
 
 
 func _debug_menu_item_selected(index: int) -> void:
 	debug_view_menu_selected = index
-	emit_signal("debug_view_changed", index)
+	debug_view_changed.emit(index)
 
 
 func _on_debug_view_menu_about_to_popup() -> void:

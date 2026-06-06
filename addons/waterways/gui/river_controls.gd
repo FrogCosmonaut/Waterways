@@ -3,8 +3,20 @@
 @tool
 extends HBoxContainer
 
-signal mode
-signal options
+signal mode_changed(mode: Mode)
+signal options_changed(option: Option)
+
+enum Mode {
+	SELECT,
+	ADD,
+	REMOVE,
+}
+
+enum Option {
+	CONSTRAINT,
+	LOCAL_MODE,
+	LOCK_SELECTION,
+}
 
 enum CONSTRAINTS {
 	NONE,
@@ -86,34 +98,34 @@ func _on_select() -> void:
 	_untoggle_buttons()
 	_disable_constraint_ui(false)
 	$Select.button_pressed = true
-	emit_signal("mode", "select")
+	mode_changed.emit(Mode.SELECT)
 
 
 func _on_add() -> void:
 	_untoggle_buttons()
 	_disable_constraint_ui(false)
 	$Add.button_pressed = true
-	emit_signal("mode", "add")
+	mode_changed.emit(Mode.ADD)
 
 
 func _on_remove() -> void:
 	_untoggle_buttons()
 	_disable_constraint_ui(true)
 	$Remove.button_pressed = true
-	emit_signal("mode", "remove")
+	mode_changed.emit(Mode.REMOVE)
 
 
 func _on_constraint_selected(index: int) -> void:
-	emit_signal("options", "constraint", index)
+	options_changed.emit(Option.CONSTRAINT, index)
 
 
 func _on_local_mode_toggled(enabled: bool) -> void:
-	emit_signal("options", "local_mode", enabled)
+	options_changed.emit(Option.LOCAL_MODE, enabled)
 
 
 func _on_lock_selection_toggled(enabled: bool) -> void:
 	lock_selection.icon = _lock_icon_closed if enabled else _lock_icon_open
-	emit_signal("options", "lock_selection", enabled)
+	options_changed.emit(Option.LOCK_SELECTION, enabled)
 
 
 func _disable_constraint_ui(disable: bool) -> void:
