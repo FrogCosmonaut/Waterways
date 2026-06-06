@@ -1,0 +1,18 @@
+[gd_resource type="ShaderMaterial" format=3 uid="uid://cxrsr6muavvrl"]
+
+[ext_resource type="Shader" uid="uid://fb5b3ielsfie" path="res://test_assets/material/terrain_shader.tres" id="1_ho2sj"]
+[ext_resource type="Texture2D" uid="uid://c3wv6ecypbkg8" path="res://test_assets/textures/rocks_albedo.png" id="2_46140"]
+[ext_resource type="Texture2D" uid="uid://ccsp74cjgs5u7" path="res://test_assets/textures/grass_albedo.jpg" id="3_c71yy"]
+[ext_resource type="Texture2D" uid="uid://i1segrsn10bh" path="res://test_assets/textures/rocks_normal.png" id="4_er6nr"]
+[ext_resource type="Texture2D" uid="uid://dbq55p2r5l4ex" path="res://test_assets/textures/grass_normal.jpg" id="5_vmiqn"]
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_ho2sj")
+shader_parameter/texture_albedo_1 = ExtResource("2_46140")
+shader_parameter/texture_albedo_2 = ExtResource("3_c71yy")
+shader_parameter/texture_normal_1 = ExtResource("4_er6nr")
+shader_parameter/texture_normal_2 = ExtResource("5_vmiqn")
+shader_parameter/normal_scale = 1.000000807500001
+shader_parameter/uv1_blend_sharpness = 10.0
+shader_parameter/uv1_scale = Vector3(0.1, 0.1, 0.1)
