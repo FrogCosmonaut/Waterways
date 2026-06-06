@@ -1,18 +1,57 @@
 [gd_scene format=3 uid="uid://b4nx8h5jfldwt"]
 
-[ext_resource type="Texture2D" uid="uid://dl2fd2kpkqfcs" path="res://addons/waterways/icons/select.svg" id="3_c7fmo"]
 [ext_resource type="Script" uid="uid://clsplbcvd0pva" path="res://addons/waterways/gui/river_controls.gd" id="4"]
-[ext_resource type="Texture2D" uid="uid://dnjok0de3mopo" path="res://addons/waterways/icons/create.svg" id="4_cumdu"]
 [ext_resource type="Script" uid="uid://cc17krlf50bbm" path="res://addons/waterways/gui/river_menu.gd" id="5"]
-[ext_resource type="Texture2D" uid="uid://cot00dv010gt2" path="res://addons/waterways/icons/delete.svg" id="5_a4vrl"]
-[ext_resource type="Texture2D" uid="uid://dh7gjig2p584k" path="res://addons/waterways/icons/lock_open.svg" id="6_lock_open"]
 
-[node name="HBoxContainer" type="HBoxContainer" unique_id=293794867]
-offset_right = 128.0
-offset_bottom = 26.0
+[sub_resource type="DPITexture" id="DPITexture_7fsmk"]
+_source = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\"><path fill=\"none\" stroke=\"#e0e0e0\" stroke-opacity=\".4\" stroke-width=\"2\" d=\"M5 13C3 4 4 3 13 5\"/><path fill=\"#5fb2ff\" d=\"M5 3a2 2 0 0 0 0 4 2 2 0 0 0 0-4zm3 5 3.291 8 .947-2.82 1.883 1.883.943-.942-1.884-1.883 2.82-.947L8 8z\"/><path fill=\"#fff\" d=\"M13 3a2 2 0 0 0 0 4 2 2 0 0 0 0-4zm-8 8a2 2 0 0 0 0 4 2 2 0 0 0 0-4z\"/></svg>
+"
+saturation = 2.0
+color_map = {
+Color(1, 0.37254903, 0.37254903, 1): Color(1, 0.47, 0.42, 1),
+Color(0.37254903, 1, 0.5921569, 1): Color(0.45, 0.95, 0.5, 1),
+Color(1, 0.8666667, 0.39607844, 1): Color(0.83, 0.78, 0.62, 1)
+}
+
+[sub_resource type="DPITexture" id="DPITexture_q288h"]
+_source = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\"><path fill=\"none\" stroke=\"#e0e0e0\" stroke-opacity=\".4\" stroke-width=\"2\" d=\"M5 13C3 4 4 3 13 5\"/><path fill=\"#5fff97\" d=\"M5 3a2 2 0 0 0 0 4 2 2 0 0 0 0-4zm6 5v3H8v2h3v3h2v-3h3v-2h-3V8z\"/><path fill=\"#fff\" d=\"M13 3a2 2 0 0 0 0 4 2 2 0 0 0 0-4zm-8 8a2 2 0 0 0 0 4 2 2 0 0 0 0-4z\"/></svg>
+"
+saturation = 2.0
+color_map = {
+Color(1, 0.37254903, 0.37254903, 1): Color(1, 0.47, 0.42, 1),
+Color(0.37254903, 1, 0.5921569, 1): Color(0.45, 0.95, 0.5, 1),
+Color(1, 0.8666667, 0.39607844, 1): Color(0.83, 0.78, 0.62, 1)
+}
+
+[sub_resource type="DPITexture" id="DPITexture_bimjb"]
+_source = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\"><path fill=\"none\" stroke=\"#e0e0e0\" stroke-opacity=\".4\" stroke-width=\"2\" d=\"M5 13C3 4 4 3 13 5\"/><path fill=\"#ff5f5f\" d=\"M5 3a2 2 0 0 0 0 4 2 2 0 0 0 0-4zm4.879 5.465L8.465 9.879 10.585 12l-2.12 2.121 1.414 1.414L12 13.415l2.121 2.12 1.414-1.414L13.415 12l2.12-2.121-1.414-1.414L12 10.585z\"/><path fill=\"#fff\" d=\"M13 3a2 2 0 0 0 0 4 2 2 0 0 0 0-4zm-8 8a2 2 0 0 0 0 4 2 2 0 0 0 0-4z\"/></svg>
+"
+saturation = 2.0
+color_map = {
+Color(1, 0.37254903, 0.37254903, 1): Color(1, 0.47, 0.42, 1),
+Color(0.37254903, 1, 0.5921569, 1): Color(0.45, 0.95, 0.5, 1),
+Color(1, 0.8666667, 0.39607844, 1): Color(0.83, 0.78, 0.62, 1)
+}
+
+[sub_resource type="DPITexture" id="DPITexture_isipq"]
+_source = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\"><path fill=\"#e0e0e0\" d=\"M13 6a5 5 0 0 0-7.498-4.326l1 1.732A3 3 0 0 1 11 6v2H2v7h12V8h-1zm-6 4h2v3H7z\"/></svg>
+"
+saturation = 2.0
+color_map = {
+Color(1, 0.37254903, 0.37254903, 1): Color(1, 0.47, 0.42, 1),
+Color(0.37254903, 1, 0.5921569, 1): Color(0.45, 0.95, 0.5, 1),
+Color(1, 0.8666667, 0.39607844, 1): Color(0.83, 0.78, 0.62, 1)
+}
+
+[sub_resource type="Curve2D" id="Curve2D_q288h"]
+
+[node name="WaterwaysRiverControls" type="HBoxContainer" unique_id=293794867]
+offset_right = 471.0
+offset_bottom = 31.0
 script = ExtResource("4")
 
 [node name="RiverMenu" type="MenuButton" parent="." unique_id=1923988649]
+unique_name_in_owner = true
 layout_mode = 2
 text = "River"
 item_count = 3
@@ -28,27 +67,31 @@ script = ExtResource("5")
 layout_mode = 2
 
 [node name="Select" type="Button" parent="." unique_id=33990973]
+unique_name_in_owner = true
 layout_mode = 2
 toggle_mode = true
-icon = ExtResource("3_c7fmo")
+icon = SubResource("DPITexture_7fsmk")
 flat = true
 
 [node name="Add" type="Button" parent="." unique_id=1953395702]
+unique_name_in_owner = true
 layout_mode = 2
 toggle_mode = true
-icon = ExtResource("4_cumdu")
+icon = SubResource("DPITexture_q288h")
 flat = true
 
 [node name="Remove" type="Button" parent="." unique_id=44672966]
+unique_name_in_owner = true
 layout_mode = 2
 toggle_mode = true
-icon = ExtResource("5_a4vrl")
+icon = SubResource("DPITexture_bimjb")
 flat = true
 
 [node name="VSeparator2" type="VSeparator" parent="." unique_id=190027377]
 layout_mode = 2
 
 [node name="Constraints" type="OptionButton" parent="." unique_id=1982243081]
+unique_name_in_owner = true
 layout_mode = 2
 flat = true
 selected = 0
@@ -71,17 +114,23 @@ popup/item_7/text = "Plane XY"
 popup/item_7/id = 7
 
 [node name="LocalMode" type="CheckBox" parent="." unique_id=1982229894]
+unique_name_in_owner = true
 layout_mode = 2
 text = "Local Mode"
+flat = true
 
 [node name="VSeparator3" type="VSeparator" parent="." unique_id=2076168054]
 layout_mode = 2
 
 [node name="LockSelection" type="Button" parent="." unique_id=1543817957]
+unique_name_in_owner = true
 layout_mode = 2
 toggle_mode = true
-icon = ExtResource("6_lock_open")
+icon = SubResource("DPITexture_isipq")
 flat = true
+
+[node name="Path2D" type="Path2D" parent="." unique_id=119279211]
+curve = SubResource("Curve2D_q288h")
 
 [connection signal="pressed" from="Select" to="." method="_on_select"]
 [connection signal="pressed" from="Add" to="." method="_on_add"]

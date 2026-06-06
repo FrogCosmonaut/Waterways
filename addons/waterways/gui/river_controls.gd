@@ -30,18 +30,35 @@ enum CONSTRAINTS {
 	PLANE_XY,
 }
 
-var menu
-var constraints
-var lock_selection
+var _mouse_down: bool
+var _lock_icon_open: Texture2D
+var _lock_icon_closed: Texture2D
 
-var _mouse_down
-var _lock_icon_open = preload("res://addons/waterways/icons/lock_open.svg")
-var _lock_icon_closed = preload("res://addons/waterways/icons/lock_closed.svg")
+@onready var menu: MenuButton = %RiverMenu
+@onready var constraints: OptionButton = %Constraints
+@onready var lock_selection: Button = %LockSelection
+@onready var _local_mode: CheckBox = %LocalMode
+@onready var _select: Button = %Select
+@onready var _add: Button = %Add
+@onready var _remove: Button = %Remove
 
-func _enter_tree() -> void:
-	menu = $RiverMenu
-	constraints = $Constraints
-	lock_selection = $LockSelection
+
+func _ready() -> void:
+	_load_editor_icons()
+
+
+func _load_editor_icons() -> void:
+	var gui := EditorInterface.get_base_control()
+	_select.icon = gui.get_theme_icon("CurveEdit", "EditorIcons")
+	_add.icon = gui.get_theme_icon("CurveCreate", "EditorIcons")
+	_remove.icon = gui.get_theme_icon("CurveDelete", "EditorIcons")
+	_lock_icon_open = gui.get_theme_icon("Unlock", "EditorIcons")
+	_lock_icon_closed = gui.get_theme_icon("Lock", "EditorIcons")
+	_select.text = ""  # Remove scene text placeholder
+	_add.text = ""  # Remove scene text placeholder
+	_remove.text = ""  # Remove scene text placeholder
+	lock_selection.text = ""  # Remove scene text placeholder
+	_on_lock_selection_toggled(lock_selection.disabled)
 
 
 func spatial_gui_input(event: InputEvent) -> bool:
@@ -63,7 +80,7 @@ func spatial_gui_input(event: InputEvent) -> bool:
 		# Handle local mode keybinding for toggling
 		if event.keycode == KEY_T:
 			# Set the input as handled to prevent default actions from the keys
-			$LocalMode.button_pressed = not $LocalMode.button_pressed
+			_local_mode.button_pressed = not _local_mode.button_pressed
 			get_viewport().set_input_as_handled()
 			return true
 		
@@ -98,21 +115,21 @@ func spatial_gui_input(event: InputEvent) -> bool:
 func _on_select() -> void:
 	_untoggle_buttons()
 	_disable_constraint_ui(false)
-	$Select.button_pressed = true
+	_select.button_pressed = true
 	mode_changed.emit(Mode.SELECT)
 
 
 func _on_add() -> void:
 	_untoggle_buttons()
 	_disable_constraint_ui(false)
-	$Add.button_pressed = true
+	_add.button_pressed = true
 	mode_changed.emit(Mode.ADD)
 
 
 func _on_remove() -> void:
 	_untoggle_buttons()
 	_disable_constraint_ui(true)
-	$Remove.button_pressed = true
+	_remove.button_pressed = true
 	mode_changed.emit(Mode.REMOVE)
 
 
@@ -130,11 +147,11 @@ func _on_lock_selection_toggled(enabled: bool) -> void:
 
 
 func _disable_constraint_ui(disable: bool) -> void:
-	$Constraints.disabled = disable
-	$LocalMode.disabled = disable
+	constraints.disabled = disable
+	_local_mode.disabled = disable
 
 
 func _untoggle_buttons() -> void:
-	$Select.button_pressed = false
-	$Add.button_pressed = false
-	$Remove.button_pressed = false
+	_select.button_pressed = false
+	_add.button_pressed = false
+	_remove.button_pressed = false
