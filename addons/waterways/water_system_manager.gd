@@ -53,6 +53,17 @@ func _get_configuration_warnings() -> PackedStringArray:
 	return warnings
 
 
+func _sample_system_map(query_pos: Vector3) -> Color:
+	if _system_img == null:
+		return Color.BLACK
+	var position_in_aabb := query_pos - _system_aabb.position
+	var pos_2d := Vector2(position_in_aabb.x, position_in_aabb.z)
+	pos_2d = pos_2d / _system_aabb_longest_axis_size
+	if pos_2d.x > 1.0 or pos_2d.x < 0.0 or pos_2d.y > 1.0 or pos_2d.y < 0.0:
+		# We are outside the aabb of the Water System
+		return Color.BLACK
+	var point := Vector2i(pos_2d * _system_img_size)
+	return _system_img.get_pixelv(point)
 func _get_property_list() -> Array:
 	return [
 		{
@@ -169,24 +180,14 @@ func get_water_altitude(query_pos: Vector3) -> float:
 	return height - query_pos.y
 
 
-# Returns the flow vector from the system flowmap
-func get_water_flow(query_pos : Vector3) -> Vector3:
-	if _system_img == null:
-		return Vector3.ZERO
-	var position_in_aabb = query_pos - _system_aabb.position
-	var pos_2d = Vector2(position_in_aabb.x, position_in_aabb.z)
-	pos_2d = pos_2d / _system_aabb.get_longest_axis_size()
-	if pos_2d.x > 1.0 or pos_2d.x < 0.0 or pos_2d.y > 1.0 or pos_2d.y < 0.0:
-		return Vector3.ZERO
-	
-	pos_2d = pos_2d * _system_img.get_width()
-	var col = _system_img.get_pixelv(pos_2d)
-	
-	if col == Color(0, 0, 0, 1):
+## Returns the flow vector from the system flowmap.
+func get_water_flow(query_pos: Vector3) -> Vector3:
+	var color: Color = _sample_system_map(query_pos)
+	if color == Color.BLACK:
 		# We hit the empty part of the System Map
 		return Vector3.ZERO
-	
-	var flow = Vector3(col.r, 0.5, col.g) * 2.0 - Vector3(1.0, 1.0, 1.0)
+
+	var flow = Vector3(color.r, 0.5, color.g) * 2.0 - Vector3(1.0, 1.0, 1.0)
 	return flow
 
 
