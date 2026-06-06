@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="WaterwaysRiverShader" format=3 uid="uid://cmyq0hcbaugye"]
+
+[ext_resource type="Script" uid="uid://ckj6uf7ifo12o" path="res://addons/waterways/resources/waterways_river_shader.gd" id="1_aw3y4"]
+[ext_resource type="Shader" uid="uid://bia1gq1ol56lr" path="res://addons/waterways/shaders/swamp.gdshader" id="2_aw3y4"]
+[ext_resource type="Texture2D" uid="uid://b85tlq8wcklbo" path="res://addons/waterways/textures/water1_normal_bump.png" id="3_frfxl"]
+
+[resource]
+script = ExtResource("1_aw3y4")
+name = "Swamp"
+shader = ExtResource("2_aw3y4")
+texture_map = Dictionary[String, Texture2D]({
+"normal_bump_texture": ExtResource("3_frfxl")
+})
+metadata/_custom_type_script = "uid://ckj6uf7ifo12o"

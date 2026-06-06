@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="WaterwaysRiverShader" format=3 uid="uid://bcc71wilcan34"]
+
+[ext_resource type="Texture2D" uid="uid://dwi2k45x8qyrv" path="res://addons/waterways/textures/debug_pattern.png" id="1_askrl"]
+[ext_resource type="Script" uid="uid://ckj6uf7ifo12o" path="res://addons/waterways/resources/waterways_river_shader.gd" id="2_askrl"]
+[ext_resource type="Texture2D" uid="uid://c0csrap4yt6oo" path="res://addons/waterways/textures/debug_arrow.svg" id="2_u0jqq"]
+[ext_resource type="Shader" uid="uid://cpxue0do6rtfa" path="res://addons/waterways/shaders/river_debug.gdshader" id="4_nhepk"]
+
+[resource]
+script = ExtResource("2_askrl")
+name = "Debug"
+shader = ExtResource("4_nhepk")
+normal_bump_texture = ExtResource("2_u0jqq")
+emission_texture = ExtResource("1_askrl")
+texture_map = Dictionary[String, Texture2D]({
+"debug_arrow": ExtResource("2_u0jqq"),
+"debug_pattern": ExtResource("1_askrl")
+})
+metadata/_custom_type_script = "uid://ckj6uf7ifo12o"

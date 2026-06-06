@@ -7,10 +7,8 @@ extends Node3D
 
 # river_changed used to update handles when values are changed on script side
 # progress_notified used to up progress bar when baking maps
-# albedo_set is needed since the gradient is a custom inspector that needs a signal to update from script side
 signal river_changed
 signal progress_notified
-#signal albedo_set
 
 const FILTER_RENDERER_PATH: String = "res://addons/waterways/filter_renderer.tscn"
 const FLOW_OFFSET_NOISE_TEXTURE_PATH: String = "res://addons/waterways/textures/flow_offset_noise.png"
@@ -18,7 +16,8 @@ const FOAM_NOISE_PATH: String = "res://addons/waterways/textures/foam_noise.png"
 
 const RIVER_MESH_INSTANCE_NAME: String = "RiverMeshInstance"
 
-const MATERIAL_CATEGORIES = {
+const SHADER_GROUP_NAME: String = "Shader"
+const SHADER_CATEGORIES = {
 	albedo_ = "Albedo",
 	emission_ = "Emission",
 	transparency_ = "Transparency",
@@ -27,49 +26,10 @@ const MATERIAL_CATEGORIES = {
 	custom_ = "Custom"
 }
 
-enum SHADER_TYPES {WATER, LAVA, CUSTOM}
-const BUILTIN_SHADERS = [
-	{
-		name = "Water",
-		shader_path = "res://addons/waterways/shaders/river.gdshader",
-		texture_paths = [
-			{
-				name = "normal_bump_texture",
-				path = "res://addons/waterways/textures/water1_normal_bump.png"
-			}
-		]
-	},
-	{
-		name = "Lava",
-		shader_path = "res://addons/waterways/shaders/lava.gdshader",
-		texture_paths = [
-			{
-				name = "normal_bump_texture",
-				path = "res://addons/waterways/textures/lava_normal_bump.png"
-			},
-			{
-				name = "emission_texture",
-				path = "res://addons/waterways/textures/lava_emission.png"
-			}
-		]
-	}
-]
+const DEFAULT_WATER_SHADER: WaterwaysRiverShader = preload("./resources/waterways_river_shader_water.tres")
+const DEBUG_SHADER: WaterwaysRiverShader = preload("./resources/waterways_river_shader_debug.tres")
 
-const DEBUG_SHADER = {
-	name = "Debug",
-	shader_path = "res://addons/waterways/shaders/river_debug.gdshader",
-	texture_paths = [
-		{
-			name = "debug_pattern",
-			path = "res://addons/waterways/textures/debug_pattern.png"
-		},
-		{
-			name = "debug_arrow",
-			path = "res://addons/waterways/textures/debug_arrow.svg"
-		}
-	]
-}
-
+@export var waterways_shader: WaterwaysRiverShader = DEFAULT_WATER_SHADER: set = set_shader
 
 # Shape Properties
 @export_group("Shape")
@@ -80,14 +40,8 @@ const DEBUG_SHADER = {
 ## How much the shape of the river is relaxed to even out corners.
 @export_range(0.1, 5.0) var shape_smoothness: float = 0.5: set = set_smoothness
 
-# Material properties not handled inside the shader. These stay in
-# _get_property_list() because the per-shader uniforms below them are injected
-# dynamically and can't be declared as @export.
-@export_group("Material")
-@export var mat_shader: WaterwaysRiverShader = DEFAULT_WATER_SHADER: set = set_shader
-
 # LOD Properties
-@export_group("Lod")
+@export_group("LOD")
 ## Cutoff distance for whether the shader samples textures twice to create a
 ## fractal (FBM) effect for the waves and foam.
 @export_range(5.0, 200.0) var lod_lod0_distance: float = 50.0: set = set_lod0_distance
@@ -142,15 +96,18 @@ var _defaults: WaterwaysRiver
 
 # Internal Methods
 func _get_property_list() -> Array:
+	# Shader properties not handled inside the shader. These stay in
+	# _get_property_list() because the per-shader uniforms below them are injected
+	# dynamically and can't be declared as @export.
 	var props = [
 		{
-			name = "Material",
+			name = SHADER_GROUP_NAME,
 			type = TYPE_NIL,
 			hint_string = "mat_",
 			usage = PROPERTY_USAGE_GROUP | PROPERTY_USAGE_SCRIPT_VARIABLE
 		},
 	]
-	var mat_categories = MATERIAL_CATEGORIES.duplicate(true)
+	var categories = SHADER_CATEGORIES.duplicate(true)
 
 	if _material.shader != null:
 		var shader_params := RenderingServer.get_shader_parameter_list(_material.shader.get_rid())
@@ -158,10 +115,10 @@ func _get_property_list() -> Array:
 			if p.name.begins_with("i_"):
 				continue
 			var hit_category = null
-			for category in mat_categories:
+			for category in categories:
 				if p.name.begins_with(category):
 					props.append({
-						name = str("Material/", mat_categories[category]),
+						name = str("%s/%s" % [SHADER_GROUP_NAME, categories[category]]),
 						type = TYPE_NIL,
 						hint_string = str("mat_", category),
 						usage = PROPERTY_USAGE_GROUP | PROPERTY_USAGE_SCRIPT_VARIABLE
@@ -169,7 +126,7 @@ func _get_property_list() -> Array:
 					hit_category = category
 					break
 			if hit_category != null:
-				mat_categories.erase(hit_category)
+				categories.erase(hit_category)
 			var cp := {}
 			for k in p:
 				cp[k] = p[k]
@@ -229,14 +186,13 @@ func _init() -> void:
 	_filter_renderer = load(FILTER_RENDERER_PATH)
 
 	_debug_material = ShaderMaterial.new()
-	_debug_material.shader = load(DEBUG_SHADER.shader_path) as Shader
-	for texture in DEBUG_SHADER.texture_paths:
-		_debug_material.set_shader_parameter(texture.name, load(texture.path) as Texture2D)
+	_debug_material.shader = DEBUG_SHADER.shader
+	for texture in DEBUG_SHADER.texture_map:
+		var image: Texture2D = DEBUG_SHADER.texture_map[texture]
+		_debug_material.set_shader_parameter(texture, image)
 
 	_material = ShaderMaterial.new()
-	_material.shader = load(BUILTIN_SHADERS[mat_shader_type].shader_path) as Shader
-	for texture in BUILTIN_SHADERS[mat_shader_type].texture_paths:
-		_material.set_shader_parameter(texture.name, load(texture.path) as Texture2D)
+	_apply_waterways_shader(DEFAULT_WATER_SHADER)
 	# Have to manually set the color or it does not default right. Not sure how to work around this
 	_material.set_shader_parameter("albedo_color", Transform3D(Vector3(0.0, 0.8, 1.0), Vector3(0.15, 0.2, 0.5), Vector3.ZERO, Vector3.ZERO))
 
@@ -272,6 +228,13 @@ func _get_configuration_warnings() -> PackedStringArray:
 	if valid_flowmap:
 		return []
 	return ["No flowmap is set. Select River -> Generate Flow & Foam Map to generate and assign one."]
+
+
+func _apply_waterways_shader(river_shader: WaterwaysRiverShader) -> void:
+	_material.shader = river_shader.shader
+	for texture in river_shader.texture_map:
+		var image: Texture2D = river_shader.texture_map[texture]
+		_material.set_shader_parameter(texture, image)
 
 
 func get_transformed_aabb() -> AABB:
@@ -378,12 +341,26 @@ func get_closest_point_to(point: Vector3) -> int:
 	return closest_index
 
 
+## Reset all the shader parameters that were modified when a new WaterwaysRiverShader is selected.
+func _reset_shader_parameters() -> void:
+	if _material.shader == null:
+		return
+	var shader_rid := _material.shader.get_rid()
+	for p in RenderingServer.get_shader_parameter_list(shader_rid):
+		if p.name.begins_with("i_"):
+			continue
+		if waterways_shader.texture_map.has(p.name):
+			continue
+		_material.set_shader_parameter(
+			p.name, RenderingServer.shader_get_parameter_default(shader_rid, p.name)
+		)
+
+
 func get_shader_parameter(param: String):
 	return _material.get_shader_parameter(param)
 
 
-func set_step_length_divs(value : int) -> void:
-	shape_step_length_divs = value
+func _invalidate_and_regen() -> void:
 	if _first_enter_tree:
 		return
 	valid_flowmap = false
@@ -394,59 +371,27 @@ func set_step_length_divs(value : int) -> void:
 
 # Parameter Setters
 func set_step_length_divs(value: int) -> void:
+	shape_step_length_divs = value
+	_invalidate_and_regen()
+
+
+func set_step_width_divs(value: int) -> void:
 	shape_step_width_divs = value
-	if _first_enter_tree:
-		return
-	valid_flowmap = false
-	set_materials("i_valid_flowmap", valid_flowmap)
-	_generate_river()
-	river_changed.emit()
+	_invalidate_and_regen()
 
 
 func set_smoothness(value: float) -> void:
 	shape_smoothness = value
-	if _first_enter_tree:
-		return
-	valid_flowmap = false
-	set_materials("i_valid_flowmap", valid_flowmap)
-	_generate_river()
-	river_changed.emit()
+	_invalidate_and_regen()
 
 
-func set_shader_type(type: int):
-	if type == mat_shader_type:
+func set_shader(value: WaterwaysRiverShader) -> void:
+	if waterways_shader == value:
 		return
-	mat_shader_type = type
-	
-	if mat_shader_type == SHADER_TYPES.CUSTOM:
-		_material.shader = mat_custom_shader
-	else:
-		_material.shader = load(BUILTIN_SHADERS[mat_shader_type].shader_path)
-		for texture in BUILTIN_SHADERS[mat_shader_type].texture_paths:
-			_material.set_shader_parameter(texture.name, load(texture.path) as Texture)
-	
+	waterways_shader = value
+	_apply_waterways_shader(waterways_shader)
+	_reset_shader_parameters()
 	notify_property_list_changed()
-
-
-func set_custom_shader(shader : Shader) -> void:
-	if mat_custom_shader == shader:
-		return
-	mat_custom_shader = shader
-	if mat_custom_shader != null:
-		_material.shader = mat_custom_shader
-		
-		if Engine.is_editor_hint:
-			# Ability to fork default shader
-			if shader.code == "":
-				var selected_shader = load(BUILTIN_SHADERS[mat_shader_type].shader_path) as Shader
-				shader.code = selected_shader.code
-
-	if shader != null:
-		print("shader != null - set shader type to custom")
-		print(shader)
-		set_shader_type(SHADER_TYPES.CUSTOM)
-	else:
-		set_shader_type(SHADER_TYPES.WATER)
 
 
 func set_lod0_distance(value: float) -> void:
