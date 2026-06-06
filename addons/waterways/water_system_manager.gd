@@ -8,18 +8,20 @@ extends Node3D
 const SYSTEM_MAP_RENDERER_SCENE: PackedScene = preload("./system_map_renderer.tscn")
 const FILTER_RENDERER_SCENE: PackedScene = preload("./filter_renderer.tscn")
 
-var system_map : ImageTexture = null: set = set_system_map
+var system_map: ImageTexture = null: set = set_system_map
 var system_bake_resolution := 2
 var system_group_name := "waterways_system"
 var minimum_water_level := 0.0
+
 # Auto assign
 var wet_group_name := "waterways_wet"
 var surface_index := -1
 var material_override := false
 
-var _system_aabb : AABB
-var _system_img : Image
+var _system_aabb: AABB
+var _system_img: Image
 var _first_enter_tree := true
+
 
 func _enter_tree() -> void:
 	if Engine.is_editor_hint() and _first_enter_tree:

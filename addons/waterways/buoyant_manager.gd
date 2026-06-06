@@ -5,18 +5,16 @@
 class_name WaterwaysBuoyant
 extends Node3D
 
+@export var water_system_group_name : StringName = &"waterways_system"
+@export var buoyancy_force: float = 5.0
+@export var up_correcting_force: float = 5.0
+@export var flow_force: float = 50.0
+@export var water_resistance: float = 5.0
 
-
-@export var water_system_group_name : String = "waterways_system"
-@export var buoyancy_force := 5.0
-@export var up_correcting_force := 5.0
-@export var flow_force := 50.0
-@export var water_resistance := 5.0
-
-var _rb : RigidBody3D
-var _default_linear_damp := -1.0
-var _default_angular_damp := -1.0
+var _rb: RigidBody3D
 var _system: WaterwaysSystemManager
+var _default_linear_damp: float = -1.0
+var _default_angular_damp: float = -1.0
 
 
 func _enter_tree() -> void:

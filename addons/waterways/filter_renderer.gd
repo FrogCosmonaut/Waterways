@@ -4,7 +4,6 @@
 class_name WaterwaysFilterRenderer
 extends SubViewport
 
-
 const DILATE_PASS1_PATH = "res://addons/waterways/shaders/filters/dilate_filter_pass1.gdshader"
 const DILATE_PASS2_PATH = "res://addons/waterways/shaders/filters/dilate_filter_pass2.gdshader"
 const DILATE_PASS3_PATH = "res://addons/waterways/shaders/filters/dilate_filter_pass3.gdshader"
@@ -16,7 +15,6 @@ const FOAM_PASS_PATH = "res://addons/waterways/shaders/filters/foam_pass.gdshade
 const COMBINE_PASS_PATH = "res://addons/waterways/shaders/filters/combine_pass.gdshader"
 const DOTPRODUCT_PASS_PATH = "res://addons/waterways/shaders/filters/dotproduct.gdshader"
 const FLOW_PRESSURE_PASS_PATH = "res://addons/waterways/shaders/filters/flow_pressure_pass.gdshader"
-
 
 var dilate_pass_1_shader : Shader
 var dilate_pass_2_shader : Shader
