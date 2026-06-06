@@ -4,216 +4,155 @@
 class_name WaterwaysFilterRenderer
 extends SubViewport
 
-const DILATE_PASS1_PATH = "res://addons/waterways/shaders/filters/dilate_filter_pass1.gdshader"
-const DILATE_PASS2_PATH = "res://addons/waterways/shaders/filters/dilate_filter_pass2.gdshader"
-const DILATE_PASS3_PATH = "res://addons/waterways/shaders/filters/dilate_filter_pass3.gdshader"
-const NORMAL_MAP_PASS_PATH = "res://addons/waterways/shaders/filters/normal_map_pass.gdshader"
-const NORMAL_TO_FLOW_PASS_PATH = "res://addons/waterways/shaders/filters/normal_to_flow_filter.gdshader"
-const BLUR_PASS1_PATH = "res://addons/waterways/shaders/filters/blur_pass1.gdshader"
-const BLUR_PASS2_PATH = "res://addons/waterways/shaders/filters/blur_pass2.gdshader"
-const FOAM_PASS_PATH = "res://addons/waterways/shaders/filters/foam_pass.gdshader"
-const COMBINE_PASS_PATH = "res://addons/waterways/shaders/filters/combine_pass.gdshader"
-const DOTPRODUCT_PASS_PATH = "res://addons/waterways/shaders/filters/dotproduct.gdshader"
-const FLOW_PRESSURE_PASS_PATH = "res://addons/waterways/shaders/filters/flow_pressure_pass.gdshader"
+const SHADER_FILTERS_DIR: String = "res://addons/waterways/shaders/filters"
+const DILATE_PASS1: String = "dilate_filter_pass1.gdshader"
+const DILATE_PASS2: String = "dilate_filter_pass2.gdshader"
+const DILATE_PASS3: String = "dilate_filter_pass3.gdshader"
+const NORMAL_MAP_PASS: String = "normal_map_pass.gdshader"
+const NORMAL_TO_FLOW_PASS: String = "normal_to_flow_filter.gdshader"
+const BLUR_PASS1: String = "blur_pass1.gdshader"
+const BLUR_PASS2: String = "blur_pass2.gdshader"
+const FOAM_PASS: String = "foam_pass.gdshader"
+const COMBINE_PASS: String = "combine_pass.gdshader"
+const DOTPRODUCT_PASS: String = "dotproduct.gdshader"
+const FLOW_PRESSURE_PASS: String = "flow_pressure_pass.gdshader"
 
-var dilate_pass_1_shader : Shader
-var dilate_pass_2_shader : Shader
-var dilate_pass_3_shader : Shader
-var normal_map_pass_shader : Shader
-var normal_to_flow_pass_shader : Shader
-var blur_pass1_shader : Shader
-var blur_pass2_shader : Shader
-var foam_pass_shader : Shader
-var combine_pass_shader : Shader
-var dotproduct_pass_shader : Shader
-var flow_pressure_pass_shader : Shader
+var dilate_pass_1_shader: Shader
+var dilate_pass_2_shader: Shader
+var dilate_pass_3_shader: Shader
+var normal_map_pass_shader: Shader
+var normal_to_flow_pass_shader: Shader
+var blur_pass1_shader: Shader
+var blur_pass2_shader: Shader
+var foam_pass_shader: Shader
+var combine_pass_shader: Shader
+var dotproduct_pass_shader: Shader
+var flow_pressure_pass_shader: Shader
 
-var filter_mat : ShaderMaterial
+var filter_mat: ShaderMaterial
+var _color_rect: ColorRect
 
 
 func _enter_tree() -> void:
-	dilate_pass_1_shader = load(DILATE_PASS1_PATH) as Shader
-	dilate_pass_2_shader = load(DILATE_PASS2_PATH) as Shader
-	dilate_pass_3_shader = load(DILATE_PASS3_PATH) as Shader
-	normal_map_pass_shader = load(NORMAL_MAP_PASS_PATH) as Shader
-	normal_to_flow_pass_shader = load(NORMAL_TO_FLOW_PASS_PATH) as Shader
-	blur_pass1_shader = load(BLUR_PASS1_PATH) as Shader
-	blur_pass2_shader = load(BLUR_PASS2_PATH) as Shader
-	foam_pass_shader = load(FOAM_PASS_PATH) as Shader
-	combine_pass_shader = load(COMBINE_PASS_PATH) as Shader
-	dotproduct_pass_shader = load(DOTPRODUCT_PASS_PATH) as Shader
-	flow_pressure_pass_shader = load(FLOW_PRESSURE_PASS_PATH) as Shader
-	
+	dilate_pass_1_shader = load(SHADER_FILTERS_DIR.path_join(DILATE_PASS1))
+	dilate_pass_2_shader = load(SHADER_FILTERS_DIR.path_join(DILATE_PASS2))
+	dilate_pass_3_shader = load(SHADER_FILTERS_DIR.path_join(DILATE_PASS3))
+	normal_map_pass_shader = load(SHADER_FILTERS_DIR.path_join(NORMAL_MAP_PASS))
+	normal_to_flow_pass_shader = load(SHADER_FILTERS_DIR.path_join(NORMAL_TO_FLOW_PASS))
+	blur_pass1_shader = load(SHADER_FILTERS_DIR.path_join(BLUR_PASS1))
+	blur_pass2_shader = load(SHADER_FILTERS_DIR.path_join(BLUR_PASS2))
+	foam_pass_shader = load(SHADER_FILTERS_DIR.path_join(FOAM_PASS))
+	combine_pass_shader = load(SHADER_FILTERS_DIR.path_join(COMBINE_PASS))
+	dotproduct_pass_shader = load(SHADER_FILTERS_DIR.path_join(DOTPRODUCT_PASS))
+	flow_pressure_pass_shader = load(SHADER_FILTERS_DIR.path_join(FLOW_PRESSURE_PASS))
+
 	filter_mat = ShaderMaterial.new()
-	
-	$ColorRect.material = filter_mat
+	_color_rect = $ColorRect
+	_color_rect.material = filter_mat
+	_color_rect.position = Vector2.ZERO
 
 
-func apply_combine(r_texture : Texture2D, g_texture : Texture2D, b_texture : Texture2D = null, a_texture : Texture2D = null) -> ImageTexture:
-	filter_mat.shader = combine_pass_shader
-	size = r_texture.get_size()
-	$ColorRect.position = Vector2(0, 0)
-	$ColorRect.size = size
-	$ColorRect.material.set_shader_parameter("r_texture", r_texture)
-	$ColorRect.material.set_shader_parameter("g_texture", g_texture)
-	$ColorRect.material.set_shader_parameter("b_texture", b_texture)
-	$ColorRect.material.set_shader_parameter("a_texture", a_texture)
+func _execute_pass(shader: Shader, texture_size: Vector2, params: Dictionary) -> ImageTexture:
+	filter_mat.shader = shader
+	size = texture_size
+	_color_rect.size = texture_size
+
+	for param_name in params:
+		filter_mat.set_shader_parameter(param_name, params[param_name])
+
 	render_target_update_mode = SubViewport.UPDATE_ONCE
 	await RenderingServer.frame_post_draw
-	var image : Image = get_texture().get_image()
-	
-	var result := ImageTexture.create_from_image(image)
-	return result
+
+	var image: Image = get_texture().get_image()
+	return ImageTexture.create_from_image(image)
 
 
-func apply_dotproduct(input_texture : Texture2D, resolution : float) -> ImageTexture:
-	filter_mat.shader = dotproduct_pass_shader
-	size = input_texture.get_size()
-	$ColorRect.position = Vector2(0, 0)
-	$ColorRect.size = size
-	$ColorRect.material.set_shader_parameter("input_texture", input_texture)
-	render_target_update_mode = SubViewport.UPDATE_ONCE
-	await RenderingServer.frame_post_draw
-	var image : Image = get_texture().get_image()
-	
-	var result := ImageTexture.create_from_image(image)
-	return result
+func apply_combine(r_texture: Texture2D, g_texture: Texture2D, b_texture: Texture2D = null, a_texture: Texture2D = null) -> ImageTexture:
+	var params: Dictionary = {
+		"r_texture": r_texture,
+		"g_texture": g_texture,
+		"b_texture": b_texture,
+		"a_texture": a_texture,
+	}
+	return await _execute_pass(combine_pass_shader, r_texture.get_size(), params)
 
 
-func apply_flow_pressure(input_texture : Texture2D, resolution : float, rows : float) -> ImageTexture:
-	filter_mat.shader = flow_pressure_pass_shader
-	size = input_texture.get_size()
-	$ColorRect.position = Vector2(0, 0)
-	$ColorRect.size = size
-	$ColorRect.material.set_shader_parameter("input_texture", input_texture)
-	$ColorRect.material.set_shader_parameter("size", resolution)
-	$ColorRect.material.set_shader_parameter("rows", rows)
-	render_target_update_mode = SubViewport.UPDATE_ONCE
-	await RenderingServer.frame_post_draw
-	var image : Image = get_texture().get_image()
-	
-	var result := ImageTexture.create_from_image(image)
-	return result
+func apply_dotproduct(input_texture: Texture2D, resolution: float) -> ImageTexture:
+	var params: Dictionary = {"input_texture": input_texture}
+	return await _execute_pass(dotproduct_pass_shader, input_texture.get_size(), params)
 
 
-func apply_foam(input_texture : Texture2D, distance : float, cutoff : float, resolution : float) -> ImageTexture:
-	filter_mat.shader = foam_pass_shader
-	size = input_texture.get_size()
-	$ColorRect.position = Vector2(0, 0)
-	$ColorRect.size = size
-	$ColorRect.material.set_shader_parameter("input_texture", input_texture)
-	$ColorRect.material.set_shader_parameter("size", resolution)
-	$ColorRect.material.set_shader_parameter("offset", distance)
-	$ColorRect.material.set_shader_parameter("cutoff", cutoff)
-	render_target_update_mode = SubViewport.UPDATE_ONCE
-	await RenderingServer.frame_post_draw
-	var image : Image = get_texture().get_image()
-	
-	var result := ImageTexture.create_from_image(image)
-	return result
+func apply_flow_pressure(input_texture: Texture2D, resolution: float, rows: float) -> ImageTexture:
+	var params: Dictionary = {
+		"input_texture": input_texture,
+		"size": resolution,
+		"rows": rows,
+	}
+	return await _execute_pass(flow_pressure_pass_shader, input_texture.get_size(), params)
 
 
-func apply_blur(input_texture : Texture2D, blur : float, resolution : float) -> ImageTexture:
-	filter_mat.shader = blur_pass1_shader
-	size = input_texture.get_size()
-	$ColorRect.position = Vector2(0, 0)
-	$ColorRect.size = size
-	$ColorRect.material.set_shader_parameter("input_texture", input_texture)
-	$ColorRect.material.set_shader_parameter("size", resolution)
-	$ColorRect.material.set_shader_parameter("blur", blur)
-	render_target_update_mode = SubViewport.UPDATE_ONCE
-	await RenderingServer.frame_post_draw
-	var image : Image = get_texture().get_image()
-	var pass1_result := ImageTexture.create_from_image(image)
+func apply_foam(input_texture: Texture2D, distance: float, cutoff: float, resolution: float) -> ImageTexture:
+	var params: Dictionary = {
+		"input_texture": input_texture,
+		"size": resolution,
+		"offset": distance,
+		"cutoff": cutoff,
+	}
+	return await _execute_pass(foam_pass_shader, input_texture.get_size(), params)
+
+
+func apply_blur(input_texture: Texture2D, blur: float, resolution: float) -> ImageTexture:
+	var params: Dictionary = {
+		"input_texture": input_texture,
+		"size": resolution,
+		"blur": blur,
+	}
+	var pass1_result := await _execute_pass(blur_pass1_shader, input_texture.get_size(), params)
+
 	# Pass 2
-	filter_mat.shader = blur_pass2_shader
-	$ColorRect.material.set_shader_parameter("input_texture", pass1_result)
-	$ColorRect.material.set_shader_parameter("size", resolution)
-	$ColorRect.material.set_shader_parameter("blur", blur)
-	render_target_update_mode = SubViewport.UPDATE_ONCE
-	await RenderingServer.frame_post_draw
-	var image2 : Image = get_texture().get_image()
-	
-	var pass2_result := ImageTexture.create_from_image(image2)
-	return pass2_result
+	params["input_texture"] = pass1_result
+	return await _execute_pass(blur_pass2_shader, input_texture.get_size(), params)
 
 
-func apply_vertical_blur(input_texture : Texture2D, blur : float, resolution : float) -> ImageTexture:
-	filter_mat.shader = blur_pass2_shader
-	size = input_texture.get_size()
-	$ColorRect.position = Vector2(0, 0)
-	$ColorRect.size = size
-	$ColorRect.material.set_shader_parameter("input_texture", input_texture)
-	$ColorRect.material.set_shader_parameter("size", resolution)
-	$ColorRect.material.set_shader_parameter("blur", blur)
-	render_target_update_mode = SubViewport.UPDATE_ONCE
-	await RenderingServer.frame_post_draw
-	var image : Image = get_texture().get_image()
-	var result := ImageTexture.create_from_image(image)
-	return result
+func apply_vertical_blur(input_texture: Texture2D, blur: float, resolution: float) -> ImageTexture:
+	var params: Dictionary = {
+		"input_texture": input_texture,
+		"size": resolution,
+		"blur": blur,
+	}
+	return await _execute_pass(blur_pass2_shader, input_texture.get_size(), params)
 
 
-func apply_normal_to_flow(input_texture : Texture2D, resolution : float) -> ImageTexture:
-	filter_mat.shader = normal_to_flow_pass_shader
-	size = input_texture.get_size()
-	$ColorRect.position = Vector2(0, 0)
-	$ColorRect.size = size
-	$ColorRect.material.set_shader_parameter("input_texture", input_texture)
-	$ColorRect.material.set_shader_parameter("size", resolution)
-	render_target_update_mode = SubViewport.UPDATE_ONCE
-	await RenderingServer.frame_post_draw
-	var image : Image = get_texture().get_image()
-	
-	var result := ImageTexture.create_from_image(image)
-	return result
+func apply_normal_to_flow(input_texture: Texture2D, resolution: float) -> ImageTexture:
+	var params: Dictionary = {
+		"input_texture": input_texture,
+		"size": resolution,
+	}
+	return await _execute_pass(normal_to_flow_pass_shader, input_texture.get_size(), params)
 
 
-func apply_normal(input_texture : Texture2D, resolution : float) -> ImageTexture:
-	filter_mat.shader = normal_map_pass_shader
-	size = input_texture.get_size()
-	$ColorRect.position = Vector2(0, 0)
-	$ColorRect.size = size
-	$ColorRect.material.set_shader_parameter("input_texture", input_texture)
-	$ColorRect.material.set_shader_parameter("size", resolution)
-	render_target_update_mode = SubViewport.UPDATE_ONCE
-	await RenderingServer.frame_post_draw
-	var image = get_texture().get_image()
-	
-	var result := ImageTexture.create_from_image(image)
-	return result
+func apply_normal(input_texture: Texture2D, resolution: float) -> ImageTexture:
+	var params: Dictionary = {
+		"input_texture": input_texture,
+		"size": resolution,
+	}
+	return await _execute_pass(normal_map_pass_shader, input_texture.get_size(), params)
 
 
-func apply_dilate(input_texture : Texture2D, dilation: float, fill: float, resolution: float, fill_texture: Texture2D = null) -> ImageTexture:
-	filter_mat.shader = dilate_pass_1_shader
-	size = input_texture.get_size()
-	$ColorRect.position = Vector2(0, 0)
-	$ColorRect.size = size
-	$ColorRect.material.set_shader_parameter("input_texture", input_texture)
-	$ColorRect.material.set_shader_parameter("size", resolution)
-	$ColorRect.material.set_shader_parameter("dilation", dilation)
-	render_target_update_mode = SubViewport.UPDATE_ONCE
-	await RenderingServer.frame_post_draw
-	var image : Image = get_texture().get_image()
-	var pass1_result := ImageTexture.create_from_image(image)
+func apply_dilate(input_texture: Texture2D, dilation: float, fill: float, resolution: float, fill_texture: Texture2D = null) -> ImageTexture:
+	var params: Dictionary = {
+		"input_texture": input_texture,
+		"size": resolution,
+		"dilation": dilation,
+	}
+	var pass1_result := await _execute_pass(dilate_pass_1_shader, input_texture.get_size(), params)
+
 	# Pass 2
-	filter_mat.shader = dilate_pass_2_shader
-	$ColorRect.material.set_shader_parameter("input_texture", pass1_result)
-	$ColorRect.material.set_shader_parameter("size", resolution)
-	$ColorRect.material.set_shader_parameter("dilation", dilation)
-	render_target_update_mode = SubViewport.UPDATE_ONCE
-	await RenderingServer.frame_post_draw
-	var image2 : Image = get_texture().get_image()
-	var pass2_result := ImageTexture.create_from_image(image2)
-#	return pass2_result
-	# Pass 3
-	filter_mat.shader = dilate_pass_3_shader
-	$ColorRect.material.set_shader_parameter("distance_texture", pass2_result)
-	if fill_texture != null:
-		$ColorRect.material.set_shader_parameter("color_texture", fill_texture)
-	$ColorRect.material.set_shader_parameter("size", resolution)
-	$ColorRect.material.set_shader_parameter("fill", fill)
-	render_target_update_mode = SubViewport.UPDATE_ONCE
-	await RenderingServer.frame_post_draw
-	var image3 : Image = get_texture().get_image()
-	var pass3_result := ImageTexture.create_from_image(image3)
-	return pass3_result
+	params["input_texture"] = pass1_result
+	var pass2_result = await _execute_pass(dilate_pass_2_shader, input_texture.get_size(), params)
+
+	params["distance_texture"] = pass2_result
+	params["fill"] = fill
+	if fill_texture:
+		params["color_texture"] = fill_texture
+	return await _execute_pass(dilate_pass_3_shader, input_texture.get_size(), params)
