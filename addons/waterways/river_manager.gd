@@ -16,6 +16,7 @@ const FILTER_RENDERER_PATH: String = "res://addons/waterways/filter_renderer.tsc
 const FLOW_OFFSET_NOISE_TEXTURE_PATH: String = "res://addons/waterways/textures/flow_offset_noise.png"
 const FOAM_NOISE_PATH: String = "res://addons/waterways/textures/foam_noise.png"
 
+const RIVER_MESH_INSTANCE_NAME: String = "RiverMeshInstance"
 
 const MATERIAL_CATEGORIES = {
 	albedo_ = "Albedo",
@@ -243,24 +244,23 @@ func _init() -> void:
 func _enter_tree() -> void:
 	if Engine.is_editor_hint() and _first_enter_tree:
 		_first_enter_tree = false
-	
+
 	if not curve:
 		curve = Curve3D.new()
 		curve.bake_interval = 0.05
 		curve.add_point(Vector3(0.0, 0.0, 0.0), Vector3(0.0, 0.0, -0.25), Vector3(0.0, 0.0, 0.25))
 		curve.add_point(Vector3(0.0, 0.0, 1.0), Vector3(0.0, 0.0, -0.25), Vector3(0.0, 0.0, 0.25))
-	
-	if get_child_count() <= 0:
-		## This is what happens on creating a new river
-		var new_mesh_instance := MeshInstance3D.new()
-		new_mesh_instance.name = "RiverMeshInstance"
-		add_child(new_mesh_instance)
-		mesh_instance = get_child(0) as MeshInstance3D
+
+	mesh_instance = find_child(RIVER_MESH_INSTANCE_NAME) as MeshInstance3D
+	if not mesh_instance:
+		# This is what happens on creating a new river
+		mesh_instance = MeshInstance3D.new()
+		mesh_instance.name = RIVER_MESH_INSTANCE_NAME
+		add_child(mesh_instance)
 		_generate_river()
 	else:
-		mesh_instance = get_child(0) as MeshInstance3D
 		_material = mesh_instance.mesh.surface_get_material(0) as ShaderMaterial
-	
+
 	set_materials("i_valid_flowmap", valid_flowmap)
 	set_materials("i_uv2_sides", _uv2_sides)
 	set_materials("i_distmap", dist_pressure)
