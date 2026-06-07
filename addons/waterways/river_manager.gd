@@ -317,7 +317,7 @@ func spawn_mesh() -> void:
 		push_warning("Cannot create MeshInstance3D sibling when River is root.")
 		return
 	var sibling_mesh := mesh_instance.duplicate(true)
-	get_parent().add_child(sibling_mesh)
+	add_child(sibling_mesh)
 	sibling_mesh.set_owner(get_tree().get_edited_scene_root())
 	sibling_mesh.position = position
 	sibling_mesh.material_override = null
@@ -327,7 +327,6 @@ func get_curve_points() -> PackedVector3Array:
 	var points: PackedVector3Array
 	for p in curve.get_point_count():
 		points.append(curve.get_point_position(p))
-	
 	return points
 
 
@@ -339,7 +338,6 @@ func get_closest_point_to(point: Vector3) -> int:
 		if dist < closest_distance:
 			closest_distance = dist
 			closest_index = p
-	
 	return closest_index
 
 

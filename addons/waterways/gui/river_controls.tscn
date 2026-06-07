@@ -1,11 +1,22 @@
 [gd_scene format=3 uid="uid://b4nx8h5jfldwt"]
 
 [ext_resource type="Script" uid="uid://clsplbcvd0pva" path="res://addons/waterways/gui/river_controls.gd" id="4"]
-[ext_resource type="Script" uid="uid://cc17krlf50bbm" path="res://addons/waterways/gui/river_menu.gd" id="5"]
+
+[sub_resource type="DPITexture" id="DPITexture_wwq4h"]
+_source = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\"><path fill=\"#e0e0e0\" d=\"m2 1v2h12v-2zm-1 3v9a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-9zm2 1h1v1h-1zm3 0h1v1h-1zm3 0h1v1h-1zm3 0h1v1h-1zm-9 2h10v6h-10zm3 1v1h4v-1z\"/></svg>
+"
+base_scale = 1.1
+saturation = 2.0
+color_map = {
+Color(1, 0.37254903, 0.37254903, 1): Color(1, 0.47, 0.42, 1),
+Color(0.37254903, 1, 0.5921569, 1): Color(0.45, 0.95, 0.5, 1),
+Color(1, 0.8666667, 0.39607844, 1): Color(0.83, 0.78, 0.62, 1)
+}
 
 [sub_resource type="DPITexture" id="DPITexture_7fsmk"]
 _source = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\"><path fill=\"none\" stroke=\"#e0e0e0\" stroke-opacity=\".4\" stroke-width=\"2\" d=\"M5 13C3 4 4 3 13 5\"/><path fill=\"#5fb2ff\" d=\"M5 3a2 2 0 0 0 0 4 2 2 0 0 0 0-4zm3 5 3.291 8 .947-2.82 1.883 1.883.943-.942-1.884-1.883 2.82-.947L8 8z\"/><path fill=\"#fff\" d=\"M13 3a2 2 0 0 0 0 4 2 2 0 0 0 0-4zm-8 8a2 2 0 0 0 0 4 2 2 0 0 0 0-4z\"/></svg>
 "
+base_scale = 1.1
 saturation = 2.0
 color_map = {
 Color(1, 0.37254903, 0.37254903, 1): Color(1, 0.47, 0.42, 1),
@@ -16,6 +27,7 @@ Color(1, 0.8666667, 0.39607844, 1): Color(0.83, 0.78, 0.62, 1)
 [sub_resource type="DPITexture" id="DPITexture_q288h"]
 _source = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\"><path fill=\"none\" stroke=\"#e0e0e0\" stroke-opacity=\".4\" stroke-width=\"2\" d=\"M5 13C3 4 4 3 13 5\"/><path fill=\"#5fff97\" d=\"M5 3a2 2 0 0 0 0 4 2 2 0 0 0 0-4zm6 5v3H8v2h3v3h2v-3h3v-2h-3V8z\"/><path fill=\"#fff\" d=\"M13 3a2 2 0 0 0 0 4 2 2 0 0 0 0-4zm-8 8a2 2 0 0 0 0 4 2 2 0 0 0 0-4z\"/></svg>
 "
+base_scale = 1.1
 saturation = 2.0
 color_map = {
 Color(1, 0.37254903, 0.37254903, 1): Color(1, 0.47, 0.42, 1),
@@ -26,6 +38,7 @@ Color(1, 0.8666667, 0.39607844, 1): Color(0.83, 0.78, 0.62, 1)
 [sub_resource type="DPITexture" id="DPITexture_bimjb"]
 _source = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\"><path fill=\"none\" stroke=\"#e0e0e0\" stroke-opacity=\".4\" stroke-width=\"2\" d=\"M5 13C3 4 4 3 13 5\"/><path fill=\"#ff5f5f\" d=\"M5 3a2 2 0 0 0 0 4 2 2 0 0 0 0-4zm4.879 5.465L8.465 9.879 10.585 12l-2.12 2.121 1.414 1.414L12 13.415l2.121 2.12 1.414-1.414L13.415 12l2.12-2.121-1.414-1.414L12 10.585z\"/><path fill=\"#fff\" d=\"M13 3a2 2 0 0 0 0 4 2 2 0 0 0 0-4zm-8 8a2 2 0 0 0 0 4 2 2 0 0 0 0-4z\"/></svg>
 "
+base_scale = 1.1
 saturation = 2.0
 color_map = {
 Color(1, 0.37254903, 0.37254903, 1): Color(1, 0.47, 0.42, 1),
@@ -34,8 +47,9 @@ Color(1, 0.8666667, 0.39607844, 1): Color(0.83, 0.78, 0.62, 1)
 }
 
 [sub_resource type="DPITexture" id="DPITexture_isipq"]
-_source = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\"><path fill=\"#e0e0e0\" d=\"M13 6a5 5 0 0 0-7.498-4.326l1 1.732A3 3 0 0 1 11 6v2H2v7h12V8h-1zm-6 4h2v3H7z\"/></svg>
+_source = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\"><path fill=\"#e0e0e0\" d=\"m3.309 1.291-2 2a1 1 0 0 0 1.414 1.414l.293-.293v8.586h8.586l-.293.293a1 1 0 0 0 1.414 1.414l2-2a1 1 0 0 0 0-1.414l-2-2a1 1 0 0 0-1.414 1.414l.293.293H6.43l5.586-5.586v.416a1 1 0 0 0 2 0v-2.83a1 1 0 0 0-1-1h-2.83a1 1 0 0 0 0 2h.416L5.016 9.584V4.412l.293.293a1 1 0 0 0 1.414-1.414l-2-2a1 1 0 0 0-1.414 0z\"/></svg>
 "
+base_scale = 1.1
 saturation = 2.0
 color_map = {
 Color(1, 0.37254903, 0.37254903, 1): Color(1, 0.47, 0.42, 1),
@@ -43,46 +57,107 @@ Color(0.37254903, 1, 0.5921569, 1): Color(0.45, 0.95, 0.5, 1),
 Color(1, 0.8666667, 0.39607844, 1): Color(0.83, 0.78, 0.62, 1)
 }
 
-[sub_resource type="Curve2D" id="Curve2D_q288h"]
+[sub_resource type="FontVariation" id="FontVariation_7fsmk"]
+spacing_top = -4
+spacing_bottom = -4
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_7fsmk"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_q288h"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_bimjb"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_isipq"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_8he8o"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_w44uo"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_fi5hx"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_68qij"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_vpfwe"]
+
+[sub_resource type="DPITexture" id="DPITexture_8he8o"]
+_source = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\"><path fill=\"#e0e0e0\" d=\"M1.553 4.104A1 1 0 0 0 1 5v6a1 1 0 0 0 .553.895l6 3a1 1 0 0 0 .894 0l6-3A1 1 0 0 0 15 11V5a1 1 0 0 0-.553-.894l-6-3a1 1 0 0 0-.894 0zm6.447-1 3.764 1.882L8 6.868 4.236 4.986zm-5 3.5 4 2v3.766l-4-2z\"/></svg>
+"
+base_scale = 1.1
+saturation = 2.0
+color_map = {
+Color(1, 0.37254903, 0.37254903, 1): Color(1, 0.47, 0.42, 1),
+Color(0.37254903, 1, 0.5921569, 1): Color(0.45, 0.95, 0.5, 1),
+Color(1, 0.8666667, 0.39607844, 1): Color(0.83, 0.78, 0.62, 1)
+}
+
+[sub_resource type="DPITexture" id="DPITexture_w44uo"]
+_source = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\"><path fill=\"#e0e0e0\" d=\"M13 6a5 5 0 0 0-7.498-4.326l1 1.732A3 3 0 0 1 11 6v2H2v7h12V8h-1zm-6 4h2v3H7z\"/></svg>
+"
+base_scale = 1.1
+saturation = 2.0
+color_map = {
+Color(1, 0.37254903, 0.37254903, 1): Color(1, 0.47, 0.42, 1),
+Color(0.37254903, 1, 0.5921569, 1): Color(0.45, 0.95, 0.5, 1),
+Color(1, 0.8666667, 0.39607844, 1): Color(0.83, 0.78, 0.62, 1)
+}
+
+[sub_resource type="DPITexture" id="DPITexture_fi5hx"]
+_source = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\"><path fill=\"#fc7f7f\" d=\"M4.73 2A2 2 0 1 0 2 4.73v6.541a2 2 0 1 0 2.73 2.73H6v-2H4.73a2 2 0 0 0-.73-.73V5.437l3.564 3.564H9V7.565L5.436 4.001h5.834a2 2 0 0 0 .73.73V6h2V4.731A2 2 0 1 0 11.27 2zM11 8v3H8v2h3v3h2v-3h3v-2h-3V8z\"/></svg>
+"
+base_scale = 1.1
+saturation = 2.0
+color_map = {
+Color(1, 0.37254903, 0.37254903, 1): Color(1, 0.47, 0.42, 1),
+Color(0.37254903, 1, 0.5921569, 1): Color(0.45, 0.95, 0.5, 1),
+Color(1, 0.8666667, 0.39607844, 1): Color(0.83, 0.78, 0.62, 1)
+}
+
+[sub_resource type="DPITexture" id="DPITexture_68qij"]
+_source = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\"><path fill=\"#e0e0e0\" d=\"M8 1a5 5 0 0 0-3.535 1.465 1 1 0 0 0 1.414 1.414 3 3 0 0 1 4.242 0 1 1 0 0 0 1.414-1.414A5 5 0 0 0 8 1zM3 4.996a1 1 0 0 0-1 1c0 .833.327 1.697.969 2.5.33.413.77.796 1.3 1.072a4 4 0 0 0-.136.432H2a1 1 0 0 0 0 2h2.131a4 4 0 0 0 .18.537c-.142.09-.279.185-.41.283-.586.44-1.108.97-1.608 1.47a1 1 0 0 0 1.414 1.413c.5-.5.978-.972 1.393-1.283.17-.127.31-.203.443-.27a4 4 0 0 0 4.914 0c.133.067.273.142.442.268.414.311.892.783 1.392 1.283a1 1 0 0 0 1.414-1.414c-.5-.5-1.022-1.03-1.607-1.469a6.236 6.236 0 0 0-.408-.28 4 4 0 0 0 .175-.54h2.133a1 1 0 0 0 0-2h-2.13a4 4 0 0 0-.135-.434 4.117 4.117 0 0 0 1.296-1.07c.643-.803.97-1.666.97-2.5a1 1 0 0 0-2 0c0 .167-.174.803-.532 1.25-.25.314-.549.55-.932.666a4 4 0 0 0-.603-.412 2 2 0 1 0-3.867 0 4 4 0 0 0-.604.408c-.383-.117-.68-.352-.931-.666-.358-.447-.532-1.083-.532-1.25a1 1 0 0 0-1-1z\"/></svg>
+"
+base_scale = 1.1
+saturation = 2.0
+color_map = {
+Color(1, 0.37254903, 0.37254903, 1): Color(1, 0.47, 0.42, 1),
+Color(0.37254903, 1, 0.5921569, 1): Color(0.45, 0.95, 0.5, 1),
+Color(1, 0.8666667, 0.39607844, 1): Color(0.83, 0.78, 0.62, 1)
+}
 
 [node name="WaterwaysRiverControls" type="HBoxContainer" unique_id=293794867]
-offset_right = 471.0
-offset_bottom = 31.0
+offset_right = 458.0
+offset_bottom = 24.0
 script = ExtResource("4")
 
-[node name="RiverMenu" type="MenuButton" parent="." unique_id=1923988649]
+[node name="BakeButton" type="Button" parent="." unique_id=576579615]
 unique_name_in_owner = true
 layout_mode = 2
-text = "River"
-item_count = 3
-popup/item_0/text = "Generate Flow & Foam Map"
-popup/item_0/id = 0
-popup/item_1/text = "Generate MeshInstance3D Sibling"
-popup/item_1/id = 1
-popup/item_2/text = "Debug View"
-popup/item_2/id = 2
-script = ExtResource("5")
+tooltip_text = "Generate Flow & Foam Map."
+icon = SubResource("DPITexture_wwq4h")
+flat = true
 
 [node name="VSeparator" type="VSeparator" parent="." unique_id=1657415534]
 layout_mode = 2
 
-[node name="Select" type="Button" parent="." unique_id=33990973]
+[node name="SelectButton" type="Button" parent="." unique_id=33990973]
 unique_name_in_owner = true
 layout_mode = 2
+tooltip_text = "Select/move points."
 toggle_mode = true
 icon = SubResource("DPITexture_7fsmk")
 flat = true
 
-[node name="Add" type="Button" parent="." unique_id=1953395702]
+[node name="AddButton" type="Button" parent="." unique_id=1953395702]
 unique_name_in_owner = true
 layout_mode = 2
+tooltip_text = "Add points. Click on an existing point to insert between existing ones."
 toggle_mode = true
 icon = SubResource("DPITexture_q288h")
 flat = true
 
-[node name="Remove" type="Button" parent="." unique_id=44672966]
+[node name="RemoveButton" type="Button" parent="." unique_id=44672966]
 unique_name_in_owner = true
 layout_mode = 2
+tooltip_text = "Remove points."
 toggle_mode = true
 icon = SubResource("DPITexture_bimjb")
 flat = true
@@ -90,9 +165,30 @@ flat = true
 [node name="VSeparator2" type="VSeparator" parent="." unique_id=190027377]
 layout_mode = 2
 
-[node name="Constraints" type="OptionButton" parent="." unique_id=1982243081]
+[node name="ConstraintsContainer" type="HBoxContainer" parent="." unique_id=624809258]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="ConstraintsTextureRect" type="TextureRect" parent="ConstraintsContainer" unique_id=53758578]
 unique_name_in_owner = true
 layout_mode = 2
+texture = SubResource("DPITexture_isipq")
+expand_mode = 3
+stretch_mode = 3
+
+[node name="ConstraintsButton" type="OptionButton" parent="ConstraintsContainer" unique_id=1769428765]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_fonts/font = SubResource("FontVariation_7fsmk")
+theme_override_styles/normal = SubResource("StyleBoxEmpty_7fsmk")
+theme_override_styles/normal_mirrored = SubResource("StyleBoxEmpty_q288h")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_bimjb")
+theme_override_styles/pressed_mirrored = SubResource("StyleBoxEmpty_isipq")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_8he8o")
+theme_override_styles/hover_mirrored = SubResource("StyleBoxEmpty_w44uo")
+theme_override_styles/disabled = SubResource("StyleBoxEmpty_fi5hx")
+theme_override_styles/disabled_mirrored = SubResource("StyleBoxEmpty_68qij")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_vpfwe")
 flat = true
 selected = 0
 item_count = 8
@@ -113,28 +209,93 @@ popup/item_6/id = 6
 popup/item_7/text = "Plane XY"
 popup/item_7/id = 7
 
-[node name="LocalMode" type="CheckBox" parent="." unique_id=1982229894]
-unique_name_in_owner = true
-layout_mode = 2
-text = "Local Mode"
-flat = true
-
-[node name="VSeparator3" type="VSeparator" parent="." unique_id=2076168054]
+[node name="VSeparator3" type="VSeparator" parent="." unique_id=401169650]
 layout_mode = 2
 
-[node name="LockSelection" type="Button" parent="." unique_id=1543817957]
+[node name="LocalModeButton" type="Button" parent="." unique_id=1758565180]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+tooltip_text = "Local mode: Switches the axis to be local to the point rather than the world. (T)"
 toggle_mode = true
-icon = SubResource("DPITexture_isipq")
+icon = SubResource("DPITexture_8he8o")
 flat = true
 
-[node name="Path2D" type="Path2D" parent="." unique_id=119279211]
-curve = SubResource("Curve2D_q288h")
+[node name="LockSelectionButton" type="Button" parent="." unique_id=1543817957]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "Prevents other nodes from being selected to focus on editing this river."
+toggle_mode = true
+icon = SubResource("DPITexture_w44uo")
+flat = true
 
-[connection signal="pressed" from="Select" to="." method="_on_select"]
-[connection signal="pressed" from="Add" to="." method="_on_add"]
-[connection signal="pressed" from="Remove" to="." method="_on_remove"]
-[connection signal="item_selected" from="Constraints" to="." method="_on_constraint_selected"]
-[connection signal="toggled" from="LocalMode" to="." method="_on_local_mode_toggled"]
-[connection signal="toggled" from="LockSelection" to="." method="_on_lock_selection_toggled"]
+[node name="VSeparator4" type="VSeparator" parent="." unique_id=2076168054]
+layout_mode = 2
+
+[node name="MeshButton" type="Button" parent="." unique_id=934561988]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "Generate MeshInstance3D sibling."
+icon = SubResource("DPITexture_fi5hx")
+flat = true
+
+[node name="VSeparator5" type="VSeparator" parent="." unique_id=677934546]
+layout_mode = 2
+
+[node name="DebugButton" type="Button" parent="." unique_id=1731102484]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "Debug view."
+toggle_mode = true
+icon = SubResource("DPITexture_68qij")
+flat = true
+
+[node name="DebugPopupMenu" type="PopupMenu" parent="DebugButton" unique_id=2044268973]
+unique_name_in_owner = true
+oversampling_override = 1.0
+size = Vector2i(326, 278)
+item_count = 10
+item_0/text = "Display Normal"
+item_0/checkable = 2
+item_0/checked = true
+item_0/id = 0
+item_1/text = "Display Debug Flow Map (RG)"
+item_1/checkable = 2
+item_1/id = 1
+item_2/text = "Display Debug Foam Map (B)"
+item_2/checkable = 2
+item_2/id = 2
+item_3/text = "Display Debug Noise Map (A)"
+item_3/checkable = 2
+item_3/id = 3
+item_4/text = "Display Debug Distance Field Map (R)"
+item_4/checkable = 2
+item_4/id = 4
+item_5/text = "Display Debug Pressure Map (G)"
+item_5/checkable = 2
+item_5/id = 5
+item_6/text = "Display Debug Flow Pattern"
+item_6/checkable = 2
+item_6/id = 6
+item_7/text = "Display Debug Flow Arrows"
+item_7/checkable = 2
+item_7/id = 7
+item_8/text = "Display Debug Flow Strength"
+item_8/checkable = 2
+item_8/id = 8
+item_9/text = "Display Debug Foam Mix"
+item_9/checkable = 2
+item_9/id = 9
+
+[connection signal="pressed" from="BakeButton" to="." method="_on_bake_button_pressed"]
+[connection signal="pressed" from="SelectButton" to="." method="_on_select_button_pressed"]
+[connection signal="pressed" from="AddButton" to="." method="_on_add_button_pressed"]
+[connection signal="pressed" from="RemoveButton" to="." method="_on_remove_button_pressed"]
+[connection signal="item_selected" from="ConstraintsContainer/ConstraintsButton" to="." method="_on_constraints_button_item_selected"]
+[connection signal="toggled" from="LocalModeButton" to="." method="_on_local_mode_toggled"]
+[connection signal="toggled" from="LockSelectionButton" to="." method="_on_lock_selection_toggled"]
+[connection signal="pressed" from="MeshButton" to="." method="_on_mesh_button_pressed"]
+[connection signal="toggled" from="DebugButton" to="." method="_on_debug_button_toggled"]
+[connection signal="id_pressed" from="DebugButton/DebugPopupMenu" to="." method="_on_debug_popup_menu_id_pressed"]
+[connection signal="popup_hide" from="DebugButton/DebugPopupMenu" to="." method="_on_debug_popup_menu_popup_hide"]

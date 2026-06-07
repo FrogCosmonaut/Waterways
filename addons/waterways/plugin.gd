@@ -39,11 +39,11 @@ func _enter_tree() -> void:
 	scene_closed.connect(_on_scene_closed)
 
 
-func _on_generate_flowmap_pressed() -> void:
+func _on_generate_flowmap_requested() -> void:
 	_edited_node.bake_texture()
 
 
-func _on_generate_mesh_pressed() -> void:
+func _on_generate_mesh_requested() -> void:
 	_edited_node.spawn_mesh()
 
 
@@ -89,7 +89,7 @@ func _on_selection_change() -> void:
 
 	# If selection is locked to a river, revert any selection change
 	if selection_locked and _edited_node is WaterwaysRiver:
-		if len(selected) == 0 or selected[0] != _edited_node:
+		if selected.is_empty() or selected[0] != _edited_node:
 			_editor_selection.clear()
 			_editor_selection.add_node(_edited_node)
 		return
@@ -97,12 +97,12 @@ func _on_selection_change() -> void:
 	_hide_water_system_control_panel()
 	_hide_river_control_panel()
 
-	if len(selected) == 0:
+	if selected.is_empty():
 		return
 	if selected[0] is WaterwaysRiver:
 		_show_river_control_panel()
 		_edited_node = selected[0] as WaterwaysRiver
-		_river_controls.menu.debug_view_menu_selected = _edited_node.debug_view
+		_river_controls.debug_view_menu_selected = _edited_node.debug_view
 		if not _edited_node.progress_notified.is_connected(_river_progress_notified):
 			_edited_node.progress_notified.connect(_river_progress_notified)
 	elif selected[0] is WaterwaysWaterfall:
@@ -323,24 +323,21 @@ func _river_progress_notified(progress: float, message: String) -> void:
 		_progress_window.hide()
 
 
-
 func _show_river_control_panel() -> void:
 	if not _river_controls.get_parent():
 		add_control_to_container(CONTAINER_SPATIAL_EDITOR_MENU, _river_controls)
-		_river_controls.menu.generate_flowmap.connect(_on_generate_flowmap_pressed)
-		_river_controls.menu.generate_mesh.connect(_on_generate_mesh_pressed)
-		_river_controls.menu.debug_view_changed.connect(_on_debug_view_changed)
+		_river_controls.generate_flowmap_requested.connect(_on_generate_flowmap_requested)
+		_river_controls.generate_mesh_requested.connect(_on_generate_mesh_requested)
+		_river_controls.debug_view_changed.connect(_on_debug_view_changed)
 
 
 func _hide_river_control_panel() -> void:
 	if _river_controls.get_parent():
 		remove_control_from_container(CONTAINER_SPATIAL_EDITOR_MENU, _river_controls)
-		_river_controls.menu.generate_flowmap.disconnect(_on_generate_flowmap_pressed)
-		_river_controls.menu.generate_mesh.disconnect(_on_generate_mesh_pressed)
-		_river_controls.menu.debug_view_changed.disconnect(_on_debug_view_changed)
-
-		if _river_controls.lock_selection:
-			_river_controls.lock_selection.button_pressed = false
+		_river_controls.generate_flowmap_requested.disconnect(_on_generate_flowmap_requested)
+		_river_controls.generate_mesh_requested.disconnect(_on_generate_mesh_requested)
+		_river_controls.debug_view_changed.disconnect(_on_debug_view_changed)
+		_river_controls.on_hide()
 
 		if selection_locked:
 			selection_locked = false
