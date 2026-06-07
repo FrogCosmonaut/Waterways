@@ -197,6 +197,12 @@ func _enter_tree() -> void:
 	if Engine.is_editor_hint() and _first_enter_tree:
 		_first_enter_tree = false
 
+	# route gizmo redraws to whichever gizmo is currently live,
+	# instead of the gizmo plugin connecting here to prevent dangling
+	# connections to freed gizmos when the editor recreates them.
+	if not river_changed.is_connected(update_gizmos):
+		river_changed.connect(update_gizmos)
+
 	if not curve:
 		curve = Curve3D.new()
 		curve.bake_interval = 0.05
@@ -503,7 +509,7 @@ func _generate_flowmap(flowmap_resolution: int) -> void:
 	# Create renderer
 	var renderer_instance = _filter_renderer.instantiate()
 
-	self.add_child(renderer_instance)
+	add_child(renderer_instance)
 
 	var flow_pressure_blur_amount = 0.04 / float(_uv2_sides) * flowmap_resolution
 	var dilate_amount = baking_dilate / float(_uv2_sides) 
@@ -531,7 +537,9 @@ func _generate_flowmap(flowmap_resolution: int) -> void:
 #	flow_map.get_image().save_png("res://test_assets/flow_map.png")
 #	blurred_flow_map.get_image().save_png("res://test_assets/blurred_flow_map.png")
 
-	remove_child(renderer_instance) # cleanup
+	# cleanup
+	remove_child(renderer_instance)
+	renderer_instance.queue_free()
 
 	flow_foam_noise = WaterwaysHelperMethods.save_baked_texture(flow_foam_noise_img, self, "flow_foam")
 	dist_pressure = WaterwaysHelperMethods.save_baked_texture(dist_pressure_img, self, "dist_pressure")

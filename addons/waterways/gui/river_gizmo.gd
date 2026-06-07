@@ -338,7 +338,7 @@ func _commit_handle(gizmo: EditorNode3DGizmo, index: int, secondary: bool, resto
 	if _is_width_point_left(index, point_count) or _is_width_point_right(index, point_count):
 		var river_widths_undo := river.widths.duplicate(true)
 		river_widths_undo[p_index] = restore
-		ur.add_do_property(river, "widths", river.widths)
+		ur.add_do_property(river, "widths", river.widths.duplicate(true))
 		ur.add_undo_property(river, "widths", river_widths_undo)
 
 	ur.add_do_method(river, "properties_changed")
@@ -355,6 +355,11 @@ func _commit_handle(gizmo: EditorNode3DGizmo, index: int, secondary: bool, resto
 
 
 func _redraw(gizmo: EditorNode3DGizmo) -> void:
+	# gizmos get destroyed and recreated by the editor, e.g. when switching tabs
+	# this prevents "Parameter instance is null" errors.
+	if not is_instance_valid(gizmo):
+		return
+
 	# Work around for issue where using "get_material" doesn't return a
 	# material when redraw is being called manually from _set_handle()
 	# so I'm caching the materials instead
@@ -365,9 +370,6 @@ func _redraw(gizmo: EditorNode3DGizmo) -> void:
 	gizmo.clear()
 
 	var river := gizmo.get_node_3d() as WaterwaysRiver
-
-	if not river.is_connected("river_changed", Callable(self, "_redraw")):
-		river.river_changed.connect(_redraw.bind(gizmo))
 
 	_draw_path(gizmo, river.curve)
 	_draw_handles(gizmo, river)
