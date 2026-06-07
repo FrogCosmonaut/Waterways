@@ -7,18 +7,18 @@ const RIVER_CONTROLS_SCENE: PackedScene = preload("./gui/river_controls.tscn")
 const WATER_SYSTEM_CONTROLS_SCENE: PackedScene = preload("./gui/water_system_controls.tscn")
 const PROGRESS_WINDOW_SCENE: PackedScene = preload("./gui/progress_window.tscn")
 
-var river_gizmo: WaterwaysRiverGizmo = WaterwaysRiverGizmo.new()
-var waterfall_gizmo: WaterwaysWaterfallGizmo = WaterwaysWaterfallGizmo.new()
-var gradient_inspector: WaterwaysInspectorPlugin = WaterwaysInspectorPlugin.new()
+var river_gizmo := _WaterwaysRiverGizmo.new()
+var waterfall_gizmo := _WaterwaysWaterfallGizmo.new()
+var gradient_inspector := _WaterwaysInspectorPlugin.new()
 
 var _river_controls = RIVER_CONTROLS_SCENE.instantiate()
 var _water_system_controls = WATER_SYSTEM_CONTROLS_SCENE.instantiate()
 var _edited_node = null
-var _progress_window: WaterwaysProgressWindow = null
-var _progress_reporter: WaterwaysProgressReporter = null
-var _editor_selection : EditorSelection = null
-var _mode := WaterwaysRiverControls.Mode.SELECT
-var constraint := WaterwaysRiverControls.Constraint.NONE
+var _progress_window: _WaterwaysProgressWindow = null
+var _progress_reporter: _WaterwaysProgressReporter = null
+var _editor_selection: EditorSelection = null
+var _mode := _WaterwaysRiverControls.Mode.SELECT
+var constraint := _WaterwaysRiverControls.Constraint.NONE
 var local_editing := false
 var selection_locked := false
 
@@ -48,7 +48,7 @@ func _on_generate_mesh_requested() -> void:
 	_edited_node.spawn_mesh()
 
 
-func _on_debug_view_changed(index : int) -> void:
+func _on_debug_view_changed(index: int) -> void:
 	_edited_node.set_debug_view(index)
 
 
@@ -105,7 +105,7 @@ func _on_selection_change() -> void:
 	if selected.is_empty():
 		return
 
-	var reporter := selected[0].get("progress") as WaterwaysProgressReporter
+	var reporter := selected[0].get("progress") as _WaterwaysProgressReporter
 	if reporter and reporter != _progress_reporter:
 		if is_instance_valid(_progress_reporter) and _progress_reporter.progress_notified.is_connected(_progress_notified):
 			_progress_reporter.progress_notified.disconnect(_progress_notified)
@@ -137,19 +137,19 @@ func _on_scene_closed(_value) -> void:
 	_hide_water_system_control_panel()
 
 
-func _on_river_controls_constraint_selected(value: WaterwaysRiverControls.Constraint) -> void:
+func _on_river_controls_constraint_selected(value: _WaterwaysRiverControls.Constraint) -> void:
 	constraint = value
 
 
-func _on_river_controls_mode_changed(new_mode: WaterwaysRiverControls.Mode) -> void:
+func _on_river_controls_mode_changed(new_mode: _WaterwaysRiverControls.Mode) -> void:
 	_mode = new_mode
 
 
-func _on_river_controls_options_changed(option: WaterwaysRiverControls.Option, value: bool) -> void:
+func _on_river_controls_options_changed(option: _WaterwaysRiverControls.Option, value: bool) -> void:
 	match option:
-		WaterwaysRiverControls.Option.LOCAL_MODE:
+		_WaterwaysRiverControls.Option.LOCAL_MODE:
 			local_editing = value
-		WaterwaysRiverControls.Option.LOCK_SELECTION:
+		_WaterwaysRiverControls.Option.LOCK_SELECTION:
 			selection_locked = value
 
 
@@ -216,18 +216,18 @@ func _forward_3d_gui_input_river(camera: Camera3D, event: InputEvent) -> int:
 
 		# We'll use this closest point to add a point in between if on the line
 		# and to remove if close to a point
-		if _mode == WaterwaysRiverControls.Mode.SELECT:
+		if _mode == _WaterwaysRiverControls.Mode.SELECT:
 			if not event.pressed:
 				river_gizmo.reset()
 			return AFTER_GUI_INPUT_PASS
-		if _mode == WaterwaysRiverControls.Mode.ADD and not event.pressed:
+		if _mode == _WaterwaysRiverControls.Mode.ADD and not event.pressed:
 			# if we don't have a point on the line, we'll calculate a point
 			# based of a plane of the last point of the curve
 			if closest_segment == -1:
 				var end_pos = _edited_node.curve.get_point_position(_edited_node.curve.get_point_count() - 1)
-				var end_pos_global : Vector3 = _edited_node.to_global(end_pos)
+				var end_pos_global: Vector3 = _edited_node.to_global(end_pos)
 
-				var z : Vector3 = _edited_node.curve.get_point_out(_edited_node.curve.get_point_count() - 1).normalized()
+				var z: Vector3 = _edited_node.curve.get_point_out(_edited_node.curve.get_point_count() - 1).normalized()
 				var x := z.cross(Vector3.DOWN).normalized()
 				var y := z.cross(x).normalized()
 				var _handle_base_transform = Transform3D(
@@ -237,7 +237,7 @@ func _forward_3d_gui_input_river(camera: Camera3D, event: InputEvent) -> int:
 
 				var plane := Plane(end_pos_global, end_pos_global + camera.transform.basis.x, end_pos_global + camera.transform.basis.y)
 				var new_pos
-				if constraint == WaterwaysRiverControls.Constraint.COLLIDERS:
+				if constraint == _WaterwaysRiverControls.Constraint.COLLIDERS:
 					var space_state = _edited_node.get_world_3d().direct_space_state
 					var ray_params = PhysicsRayQueryParameters3D.create(ray_from, ray_from + ray_dir * 4096)
 					var result = space_state.intersect_ray(ray_params)
@@ -245,26 +245,26 @@ func _forward_3d_gui_input_river(camera: Camera3D, event: InputEvent) -> int:
 						new_pos = result.position
 					else:
 						return AFTER_GUI_INPUT_PASS
-				elif constraint == WaterwaysRiverControls.Constraint.NONE:
+				elif constraint == _WaterwaysRiverControls.Constraint.NONE:
 					new_pos = plane.intersects_ray(ray_from, ray_from + ray_dir * 4096)
 
-				elif constraint in WaterwaysRiverGizmo.AXIS_MAPPING:
-					var axis: Vector3 = WaterwaysRiverGizmo.AXIS_MAPPING[constraint]
+				elif constraint in _WaterwaysRiverGizmo.AXIS_MAPPING:
+					var axis: Vector3 = _WaterwaysRiverGizmo.AXIS_MAPPING[constraint]
 					if local_editing:
 						axis = _handle_base_transform.basis * (axis)
-					var axis_from = end_pos_global + (axis * WaterwaysRiverGizmo.AXIS_CONSTRAINT_LENGTH)
-					var axis_to = end_pos_global - (axis * WaterwaysRiverGizmo.AXIS_CONSTRAINT_LENGTH)
-					var ray_to = ray_from + (ray_dir * WaterwaysRiverGizmo.AXIS_CONSTRAINT_LENGTH)
+					var axis_from = end_pos_global + (axis * _WaterwaysRiverGizmo.AXIS_CONSTRAINT_LENGTH)
+					var axis_to = end_pos_global - (axis * _WaterwaysRiverGizmo.AXIS_CONSTRAINT_LENGTH)
+					var ray_to = ray_from + (ray_dir * _WaterwaysRiverGizmo.AXIS_CONSTRAINT_LENGTH)
 					var result = Geometry3D.get_closest_points_between_segments(axis_from, axis_to, ray_from, ray_to)
 					new_pos = result[0]
 
-				elif constraint in WaterwaysRiverGizmo.PLANE_MAPPING:
-					var normal: Vector3 = WaterwaysRiverGizmo.PLANE_MAPPING[constraint]
+				elif constraint in _WaterwaysRiverGizmo.PLANE_MAPPING:
+					var normal: Vector3 = _WaterwaysRiverGizmo.PLANE_MAPPING[constraint]
 					if local_editing:
 						normal = _handle_base_transform.basis * (normal)
-					var projected : Vector3 = end_pos_global.project(normal)
-					var direction : float = signf(projected.dot(normal))
-					var distance : float = direction * projected.length()
+					var projected: Vector3 = end_pos_global.project(normal)
+					var direction: float = signf(projected.dot(normal))
+					var distance: float = direction * projected.length()
 					plane = Plane(normal, distance)
 					new_pos = plane.intersects_ray(ray_from, ray_dir)
 
@@ -286,7 +286,7 @@ func _forward_3d_gui_input_river(camera: Camera3D, event: InputEvent) -> int:
 			ur.add_undo_property(_edited_node, "valid_flowmap", _edited_node.valid_flowmap)
 			ur.add_undo_method(_edited_node, "update_configuration_warnings")
 			ur.commit_action()
-		if _mode == WaterwaysRiverControls.Mode.REMOVE and not event.pressed:
+		if _mode == _WaterwaysRiverControls.Mode.REMOVE and not event.pressed:
 			# A closest_segment of -1 means we didn't press close enough to a
 			# point for it to be removed
 			if not closest_segment == -1:

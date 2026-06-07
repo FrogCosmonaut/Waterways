@@ -2,9 +2,9 @@
 extends MeshInstance3D
 
 
-@export var water_system_group_name : String = "waterways_system"
+@export var water_system_group_name: String = "waterways_system"
 
-var _system : WaterwaysSystem
+var _system: WaterwaysSystem
 
 # Called when the node enters the scene tree for the first time.
 func _ready():

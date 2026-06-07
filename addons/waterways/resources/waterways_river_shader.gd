@@ -1,3 +1,4 @@
+@icon("../icons/waterways_shader.svg")
 class_name WaterwaysRiverShader
 extends Resource
 

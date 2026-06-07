@@ -44,7 +44,7 @@ const DEBUG_SHADER: WaterwaysRiverShader = preload("./resources/waterways_river_
 @export_group("Baking")
 ## Resolution of the baked flow and foam map. It does not need to be large to
 ## look good, and baking time grows fast, so only increase it if you need to.
-@export var baking_resolution := WaterwaysConstants.BakeResolution._256
+@export var baking_resolution := _WaterwaysConstants.BakeResolution._256
 ## Raycast the collision map at half resolution and upscale it. Roughly 4x fewer
 ## raycasts for a small precision loss (the map is dilated and blurred anyway).
 @export var baking_half_res_collision: bool = false
@@ -84,7 +84,7 @@ var _filter_renderer: PackedScene
 var _defaults: WaterwaysRiver
 
 ## Reports bake progress to the editor. See [WaterwaysProgressReporter].
-var progress := WaterwaysProgressReporter.new(self)
+var progress := _WaterwaysProgressReporter.new(self)
 
 # Serialised private variables
 @export_storage var _material: ShaderMaterial
@@ -210,11 +210,11 @@ func _enter_tree() -> void:
 		curve.add_point(Vector3(0.0, 0.0, 0.0), Vector3(0.0, 0.0, -0.25), Vector3(0.0, 0.0, 0.25))
 		curve.add_point(Vector3(0.0, 0.0, 1.0), Vector3(0.0, 0.0, -0.25), Vector3(0.0, 0.0, 0.25))
 
-	mesh_instance = find_child(WaterwaysConstants.RIVER_MESH_NAME, true, false) as MeshInstance3D
+	mesh_instance = find_child(_WaterwaysConstants.RIVER_MESH_NAME, true, false) as MeshInstance3D
 	if not mesh_instance:
 		# This is what happens on creating a new river
 		mesh_instance = MeshInstance3D.new()
-		mesh_instance.name = WaterwaysConstants.RIVER_MESH_NAME
+		mesh_instance.name = _WaterwaysConstants.RIVER_MESH_NAME
 		add_child(mesh_instance)
 		_generate_river()
 	else:
@@ -224,7 +224,7 @@ func _enter_tree() -> void:
 	set_materials("i_uv2_sides", _uv2_sides)
 	set_materials("i_distmap", dist_pressure)
 	set_materials("i_flowmap", flow_foam_noise)
-	set_materials("i_texture_foam_noise", WaterwaysConstants.get_foam_noise_texture())
+	set_materials("i_texture_foam_noise", _WaterwaysConstants.get_foam_noise_texture())
 
 
 func _get_configuration_warnings() -> PackedStringArray:
@@ -403,11 +403,11 @@ func set_lod0_distance(value: float) -> void:
 #region Private Methods
 
 func _generate_river() -> void:
-	var average_width := WaterwaysHelperMethods.sum_array(widths) / (float(widths.size()) / 2.0)
+	var average_width := _WaterwaysHelperMethods.sum_array(widths) / (float(widths.size()) / 2.0)
 	_steps = int( max(1.0, round(curve.get_baked_length() / average_width)) )
 	
-	var river_width_values := WaterwaysHelperMethods.generate_river_width_values(curve, _steps, shape_step_length_divs, shape_step_width_divs, widths)
-	mesh_instance.mesh = WaterwaysHelperMethods.generate_river_mesh(curve, _steps, shape_step_length_divs, shape_step_width_divs, shape_smoothness, river_width_values)
+	var river_width_values := _WaterwaysHelperMethods.generate_river_width_values(curve, _steps, shape_step_length_divs, shape_step_width_divs, widths)
+	mesh_instance.mesh = _WaterwaysHelperMethods.generate_river_mesh(curve, _steps, shape_step_length_divs, shape_step_width_divs, shape_smoothness, river_width_values)
 	mesh_instance.mesh.surface_set_material(0, _material)
 
 
@@ -431,7 +431,7 @@ func _generate_flowmap(flowmap_resolution: int) -> void:
 
 	var baker_thread = Thread.new()
 	baker_thread.start(
-		WaterwaysHelperMethods.generate_collision_positions.bind(
+		_WaterwaysHelperMethods.generate_collision_positions.bind(
 			global_trans, mesh_arrays, _steps,
 			shape_step_length_divs, shape_step_width_divs, collision_res, collision_res, progress
 		)
@@ -480,15 +480,15 @@ func _generate_flowmap(flowmap_resolution: int) -> void:
 		image.resize(res, res, Image.INTERPOLATE_NEAREST)
 
 	# Calculate how many columns are in UV2
-	_uv2_sides = WaterwaysHelperMethods.calculate_side(_steps)
+	_uv2_sides = _WaterwaysHelperMethods.calculate_side(_steps)
 	
 	var margin := res / float(_uv2_sides)
-	image = WaterwaysHelperMethods.add_margins(image, res, margin)
+	image = _WaterwaysHelperMethods.add_margins(image, res, margin)
 
 	var collision_with_margins := ImageTexture.create_from_image(image)
 
 	# Create correctly tiling noise for A channel
-	var noise_texture := WaterwaysConstants.get_flow_noise_texture()
+	var noise_texture := _WaterwaysConstants.get_flow_noise_texture()
 	var noise_with_margin_size := float(_uv2_sides + 2) * (float(noise_texture.get_width()) / float(_uv2_sides))
 	var noise_with_tiling := Image.create(noise_with_margin_size, noise_with_margin_size, false, Image.FORMAT_RGB8)
 	var slice_width := float(noise_texture.get_width()) / float(_uv2_sides)
@@ -534,12 +534,12 @@ func _generate_flowmap(flowmap_resolution: int) -> void:
 	remove_child(renderer_instance)
 	renderer_instance.queue_free()
 
-	var _wc := WaterwaysConstants # wc xD
+	var _wc := _WaterwaysConstants # wc xD
 	var flow_foam_filename := _wc.BAKED_TEXTURE_SUFFIXES_MAP.get(_wc.BakedTextureSuffix.FLOW_FOAM)
 	var dist_press_filename := _wc.BAKED_TEXTURE_SUFFIXES_MAP.get(_wc.BakedTextureSuffix.DIST_PRESSURE)
 
-	flow_foam_noise = WaterwaysHelperMethods.save_baked_texture(flow_foam_noise_img, self, flow_foam_filename)
-	dist_pressure = WaterwaysHelperMethods.save_baked_texture(dist_pressure_img, self, dist_press_filename)
+	flow_foam_noise = _WaterwaysHelperMethods.save_baked_texture(flow_foam_noise_img, self, flow_foam_filename)
+	dist_pressure = _WaterwaysHelperMethods.save_baked_texture(dist_pressure_img, self, dist_press_filename)
 
 	set_materials("i_flowmap", flow_foam_noise)
 	set_materials("i_distmap", dist_pressure)

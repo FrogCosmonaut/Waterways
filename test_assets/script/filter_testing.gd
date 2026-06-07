@@ -2,10 +2,10 @@
 extends Node3D
 
 @export var test_render := false: set = do_test_render
-@export var input : Texture2D
-@export var output : Texture2D
+@export var input: Texture2D
+@export var output: Texture2D
 
-var _filter_renderer : PackedScene
+var _filter_renderer: PackedScene
 
 const FILTER_RENDERER_PATH = "res://addons/waterways/filter_renderer.tscn"
 

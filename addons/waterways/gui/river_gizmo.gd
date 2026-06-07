@@ -1,19 +1,19 @@
 # Copyright © 2023 Kasper Arnklit Frandsen - MIT License
 # See `LICENSE.md` included in the source distribution for details.
-class_name WaterwaysRiverGizmo
+class_name _WaterwaysRiverGizmo
 extends EditorNode3DGizmoPlugin
 
 const HANDLES_PER_POINT = 5
 const AXIS_CONSTRAINT_LENGTH = 4096
 const AXIS_MAPPING := {
-	WaterwaysRiverControls.Constraint.AXIS_X: Vector3.RIGHT,
-	WaterwaysRiverControls.Constraint.AXIS_Y: Vector3.UP,
-	WaterwaysRiverControls.Constraint.AXIS_Z: Vector3.BACK,
+	_WaterwaysRiverControls.Constraint.AXIS_X: Vector3.RIGHT,
+	_WaterwaysRiverControls.Constraint.AXIS_Y: Vector3.UP,
+	_WaterwaysRiverControls.Constraint.AXIS_Z: Vector3.BACK,
 }
 const PLANE_MAPPING := {
-	WaterwaysRiverControls.Constraint.PLANE_YZ: Vector3.RIGHT,
-	WaterwaysRiverControls.Constraint.PLANE_XZ: Vector3.UP,
-	WaterwaysRiverControls.Constraint.PLANE_XY: Vector3.BACK,
+	_WaterwaysRiverControls.Constraint.PLANE_YZ: Vector3.RIGHT,
+	_WaterwaysRiverControls.Constraint.PLANE_XZ: Vector3.UP,
+	_WaterwaysRiverControls.Constraint.PLANE_XY: Vector3.BACK,
 }
 
 var editor_plugin: EditorPlugin
@@ -237,7 +237,7 @@ func _set_handle(gizmo: EditorNode3DGizmo, index: int, secondary: bool, camera: 
 	if is_center or is_cp_in or is_cp_out:
 		var new_pos
 
-		if editor_plugin.constraint == WaterwaysRiverControls.Constraint.COLLIDERS:
+		if editor_plugin.constraint == _WaterwaysRiverControls.Constraint.COLLIDERS:
 			# TODO - make in / out handles snap to a plane based on the normal of
 			# the raycast hit instead.
 			var ray_params: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.new()
@@ -247,7 +247,7 @@ func _set_handle(gizmo: EditorNode3DGizmo, index: int, secondary: bool, camera: 
 			if result:
 				new_pos = result.position
 
-		elif editor_plugin.constraint == WaterwaysRiverControls.Constraint.NONE:
+		elif editor_plugin.constraint == _WaterwaysRiverControls.Constraint.NONE:
 			var plane = Plane(old_pos_global, old_pos_global + camera.transform.basis.x, old_pos_global + camera.transform.basis.y)
 			new_pos = plane.intersects_ray(ray_from, ray_dir)
 

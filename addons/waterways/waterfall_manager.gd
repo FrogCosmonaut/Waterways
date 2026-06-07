@@ -28,10 +28,10 @@ var points := PackedVector3Array([Vector3(0.0, 4.0, 0.0), Vector3(0.0, 0.0, 1.0)
 		points = value
 		_generate_waterfall()
 		waterfall_changed.emit()
-var mesh_instance : MeshInstance3D
+var mesh_instance: MeshInstance3D
 
-var _st : SurfaceTool
-var _mdt : MeshDataTool
+var _st: SurfaceTool
+var _mdt: MeshDataTool
 var _steps := 2
 var _first_enter_tree = true
 
@@ -62,7 +62,7 @@ func _enter_tree() -> void:
 
 	if get_child_count() <= 0:
 		var new_mesh_instance := MeshInstance3D.new()
-		new_mesh_instance.name = WaterwaysConstants.WATERFALL_MESH_NAME
+		new_mesh_instance.name = _WaterwaysConstants.WATERFALL_MESH_NAME
 		add_child(new_mesh_instance)
 		mesh_instance = get_child(0) as MeshInstance3D
 		_generate_waterfall()

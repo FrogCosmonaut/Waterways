@@ -1,6 +1,6 @@
 # Copyright © 2023 Kasper Arnklit Frandsen - MIT License
 # See `LICENSE.md` included in the source distribution for details.
-class_name WaterwaysInspectorPlugin
+class_name _WaterwaysInspectorPlugin
 extends EditorInspectorPlugin
 
 var _editor = load("res://addons/waterways/editor_property.gd")

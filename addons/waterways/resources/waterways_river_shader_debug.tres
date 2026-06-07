@@ -9,8 +9,6 @@
 script = ExtResource("2_askrl")
 name = "Debug"
 shader = ExtResource("4_nhepk")
-normal_bump_texture = ExtResource("2_u0jqq")
-emission_texture = ExtResource("1_askrl")
 texture_map = Dictionary[String, Texture2D]({
 "debug_arrow": ExtResource("2_u0jqq"),
 "debug_pattern": ExtResource("1_askrl")

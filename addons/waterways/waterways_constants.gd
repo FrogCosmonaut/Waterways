@@ -1,4 +1,4 @@
-class_name WaterwaysConstants
+class_name _WaterwaysConstants
 extends RefCounted
 
 enum BakeResolution {

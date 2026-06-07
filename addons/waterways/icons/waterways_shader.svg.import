@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://do72uhswxn214"
-path="res://.godot/imported/river.svg-233e9c2c3b3e593909a8b0720e3d3ed5.ctex"
+uid="uid://t50aoj4whjh8"
+path="res://.godot/imported/waterways_shader.svg-965cfa661cf3db38c81d33a3cbe0978e.ctex"
 metadata={
 "has_editor_variant": true,
 "vram_texture": false
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://addons/waterways/icons/river.svg"
-dest_files=["res://.godot/imported/river.svg-233e9c2c3b3e593909a8b0720e3d3ed5.ctex"]
+source_file="res://addons/waterways/icons/waterways_shader.svg"
+dest_files=["res://.godot/imported/waterways_shader.svg-965cfa661cf3db38c81d33a3cbe0978e.ctex"]
 
 [params]
 

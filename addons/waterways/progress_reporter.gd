@@ -1,5 +1,5 @@
 @tool
-class_name WaterwaysProgressReporter
+class_name _WaterwaysProgressReporter
 extends RefCounted
 ## Reports progress of bakes so the editor shows a progress bar.
 ## WaterwaysRiver and WaterwaysSystem each own one as their
@@ -10,7 +10,7 @@ signal progress_notified(percentage: float, message: String)
 var _owner: Node
 
 # bookkeeping for an active relay (see chain_from / end_chain).
-var _chained_source: WaterwaysProgressReporter = null
+var _chained_source: _WaterwaysProgressReporter = null
 var _chained_callback: Callable
 
 
@@ -37,7 +37,7 @@ func report_deferred(percentage: float, message: String) -> void:
 ## Relays every update from [param source] into this reporter, remapped into the
 ## [param base]..[param base] + [param span] window and prefixed with [param prefix].
 ## Call [method end_chain] once the chaine finish.
-func chain_from(source: WaterwaysProgressReporter, base: float, span: float, prefix: String) -> void:
+func chain_from(source: _WaterwaysProgressReporter, base: float, span: float, prefix: String) -> void:
 	_chained_source = source
 	_chained_callback = func(percentage: float, message: String) -> void:
 		report(base + span * percentage / 100.0, prefix + message)

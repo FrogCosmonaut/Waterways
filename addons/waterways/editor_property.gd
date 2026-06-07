@@ -4,7 +4,7 @@ extends EditorProperty
 
 const GRADIENT_INSPECTOR_SCENE: PackedScene = preload("res://addons/waterways/gui/gradient_inspector.tscn")
 
-var _ui : WaterwaysGradientInspector
+var _ui: _WaterwaysGradientInspector
 var _updating := false
 
 

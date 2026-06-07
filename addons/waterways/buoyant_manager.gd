@@ -6,7 +6,7 @@ class_name WaterwaysBuoyant
 extends Node3D
 
 ## Used to find the [WaterwaysSystem] to get height and flow data, it should match the value in your [WaterwaysSystem].
-@export var water_system_group_name : StringName = WaterwaysConstants.DEFAULT_SYSTEM_GROUP_NAME
+@export var water_system_group_name: StringName = _WaterwaysConstants.DEFAULT_SYSTEM_GROUP_NAME
 ## Amount of upwards force applied to the [RigidBody3D] when the Buoyant is under the water level.[br]
 ## Rule of thumb: a [RigidBody3D] with ~1 kg mass needs roughly 30-35 to float near the surface..
 ## Scale it with the mass (heavier body -> higher force). Too low and the body rests

@@ -1,7 +1,7 @@
 # Copyright © 2023 Kasper Arnklit Frandsen - MIT License
 # See `LICENSE.md` included in the source distribution for details.
 @tool
-class_name WaterwaysSystemControls
+class_name _WaterwaysSystemControls
 extends HBoxContainer
 
 signal generate_system_maps_requested

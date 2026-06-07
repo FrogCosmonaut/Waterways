@@ -11,10 +11,10 @@ const FILTER_RENDERER_SCENE: PackedScene = preload("./filter_renderer.tscn")
 ## The baked system maps texture.
 @export var system_map: ImageTexture = null: set = set_system_map
 ## The resolution of the system maps.
-@export var system_bake_resolution := WaterwaysConstants.BakeResolution._512
+@export var system_bake_resolution := _WaterwaysConstants.BakeResolution._512
 ## This group name is assigned at runtime, it is used by the [WaterwaysBuoyant] node to find the [WaterwaysSystem].
 ## If you only have one [WaterwaysSystem], you can just leave this be.
-@export var system_group_name: StringName = WaterwaysConstants.DEFAULT_SYSTEM_GROUP_NAME
+@export var system_group_name: StringName = _WaterwaysConstants.DEFAULT_SYSTEM_GROUP_NAME
 ## This is the value returned when an object queries the [WaterwaysSystem] heightmap,
 ## but hits outside the baked height data.
 @export var minimum_water_level: float = 0.0
@@ -43,7 +43,7 @@ var _system_img: Image:
 var _first_enter_tree: bool = true
 
 ## Reports bake progress to the editor. See [WaterwaysProgressReporter].
-var progress := WaterwaysProgressReporter.new(self)
+var progress := _WaterwaysProgressReporter.new(self)
 
 # Cached longest_axis_size. Updated only when _system_aab is changed.
 var _system_aabb_longest_axis_size: float
@@ -129,7 +129,7 @@ func generate_system_maps() -> void:
 		var river_aabb = river.get_transformed_aabb()
 		_system_aabb = _system_aabb.merge(river_aabb)
 
-	var renderer: WaterwaysSystemMapRenderer = SYSTEM_MAP_RENDERER_SCENE.instantiate()
+	var renderer: _WaterwaysSystemMapRenderer = SYSTEM_MAP_RENDERER_SCENE.instantiate()
 	add_child(renderer)
 	var flow_map: ImageTexture = await renderer.grab_flow(rivers, _system_aabb, system_bake_resolution)
 	var height_map: ImageTexture = await renderer.grab_height(rivers, _system_aabb, system_bake_resolution)
@@ -139,14 +139,14 @@ func generate_system_maps() -> void:
 
 	remove_child(renderer)
 
-	var filter_renderer: WaterwaysFilterRenderer = FILTER_RENDERER_SCENE.instantiate()
+	var filter_renderer: _WaterwaysFilterRenderer = FILTER_RENDERER_SCENE.instantiate()
 	add_child(filter_renderer)
 
-	var _wc := WaterwaysConstants
+	var _wc := _WaterwaysConstants
 	var system_map_suffix := _wc.BAKED_TEXTURE_SUFFIXES_MAP.get(_wc.BakedTextureSuffix.SYSTEM_MAP)
 
 	system_map = await filter_renderer.apply_combine(flow_map, flow_map, height_map) as ImageTexture
-	system_map = WaterwaysHelperMethods.save_baked_texture(system_map, self, system_map_suffix) as ImageTexture
+	system_map = _WaterwaysHelperMethods.save_baked_texture(system_map, self, system_map_suffix) as ImageTexture
 
 	remove_child(filter_renderer)
 

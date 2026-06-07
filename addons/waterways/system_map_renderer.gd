@@ -1,7 +1,7 @@
 # Copyright © 2023 Kasper Arnklit Frandsen - MIT License
 # See `LICENSE.md` included in the source distribution for details.
 @tool
-class_name WaterwaysSystemMapRenderer
+class_name _WaterwaysSystemMapRenderer
 extends SubViewport
 
 @onready var _camera: Camera3D = $Camera3D
@@ -51,7 +51,7 @@ func grab_height(water_objects: Array[WaterwaysRiver], aabb: AABB, resolution: f
 	_setup_viewport(resolution)
 
 	var height_mat := ShaderMaterial.new()
-	height_mat.shader = WaterwaysConstants.get_render_shader(WaterwaysConstants.RenderShader.HEIGHT_SHADER)
+	height_mat.shader = _WaterwaysConstants.get_render_shader(_WaterwaysConstants.RenderShader.HEIGHT_SHADER)
 
 	height_mat.set_shader_parameter("lower_bounds", aabb.position.y)
 	height_mat.set_shader_parameter("upper_bounds", aabb.end.y)
@@ -74,7 +74,7 @@ func grab_alpha(water_objects: Array[WaterwaysRiver], aabb: AABB, resolution: fl
 	_setup_viewport(resolution)
 
 	var alpha_mat := ShaderMaterial.new()
-	alpha_mat.shader = WaterwaysConstants.get_render_shader(WaterwaysConstants.RenderShader.FLOW_SHADER)
+	alpha_mat.shader = _WaterwaysConstants.get_render_shader(_WaterwaysConstants.RenderShader.FLOW_SHADER)
 
 	for object in water_objects:
 		var water_mesh_copy = object.mesh_instance.duplicate(true)
@@ -94,7 +94,7 @@ func grab_flow(water_objects: Array[WaterwaysRiver], aabb: AABB, resolution: flo
 	_setup_viewport(resolution)
 
 	var flow_mat := ShaderMaterial.new()
-	flow_mat.shader = WaterwaysConstants.get_render_shader(WaterwaysConstants.RenderShader.FLOW_SHADER)
+	flow_mat.shader = _WaterwaysConstants.get_render_shader(_WaterwaysConstants.RenderShader.FLOW_SHADER)
 
 	for i in water_objects.size():
 		flow_mat.set_shader_parameter("flowmap", water_objects[i].flow_foam_noise)

@@ -1,10 +1,10 @@
 # Copyright © 2023 Kasper Arnklit Frandsen - MIT License
 # See `LICENSE.md` included in the source distribution for details.
-class_name WaterwaysHelperMethods
+class_name _WaterwaysHelperMethods
 extends RefCounted
 
 
-static func cart2bary(p : Vector3, a : Vector3, b : Vector3, c: Vector3) -> Vector3:
+static func cart2bary(p: Vector3, a: Vector3, b: Vector3, c: Vector3) -> Vector3:
 	var v0 := b - a
 	var v1 := c - a
 	var v2 := p - a
@@ -20,36 +20,36 @@ static func cart2bary(p : Vector3, a : Vector3, b : Vector3, c: Vector3) -> Vect
 	return Vector3(u, v, w)
 
 
-static func bary2cart(a : Vector3, b : Vector3, c: Vector3, barycentric: Vector3) -> Vector3:
+static func bary2cart(a: Vector3, b: Vector3, c: Vector3, barycentric: Vector3) -> Vector3:
 	return barycentric.x * a + barycentric.y * b + barycentric.z * c
 
 
-static func point_in_bariatric(v : Vector3) -> bool:
+static func point_in_bariatric(v: Vector3) -> bool:
 	return 0 <= v.x and v.x <= 1 and 0 <= v.y and v.y <= 1 and 0 <= v.z and v.z <= 1;
 
 
-static func sum_array(array : Array[float]) -> float:
+static func sum_array(array: Array[float]) -> float:
 	var sum := 0.0
 	for element in array:
 			sum += element
 	return sum
 
 
-static func calculate_side(steps : int) -> int:
-	var side_float : float = sqrt(steps)
+static func calculate_side(steps: int) -> int:
+	var side_float: float = sqrt(steps)
 	if fmod(side_float, 1.0) != 0.0:
 		side_float += 1.0
 	return int(side_float)
 
 
-static func generate_river_width_values(curve : Curve3D, steps : int, step_length_divs : int, step_width_divs : int, widths : Array[float]) -> Array[float]:
+static func generate_river_width_values(curve: Curve3D, steps: int, step_length_divs: int, step_width_divs: int, widths: Array[float]) -> Array[float]:
 	var river_width_values: Array[float]
 	var length := curve.get_baked_length()
 	for step in steps * step_length_divs + 1:
 		var target_pos := curve.sample_baked((float(step) / float(steps * step_length_divs + 1)) * curve.get_baked_length())
 		var closest_dist := 4096.0
-		var closest_interpolate : float
-		var closest_point : int
+		var closest_interpolate: float
+		var closest_point: int
 		for c_point in curve.get_point_count() - 1:
 			for i in 100:
 				var interpolate := float(i) / 100.0
@@ -78,7 +78,7 @@ static func generate_river_mesh(curve: Curve3D, steps: int, step_length_divs: in
 		var forward_vector := forward_pos - backward_pos
 		var right_vector := forward_vector.cross(Vector3.UP).normalized()
 		
-		var width_lerp : float = river_width_values[step]
+		var width_lerp: float = river_width_values[step]
 		
 		for w_sub in step_width_divs + 1:
 			st.set_uv(Vector2(float(w_sub) / (float(step_width_divs)), float(step) / float(step_length_divs) ))
@@ -158,7 +158,7 @@ static func generate_collision_positions(
 	step_width_divs: int,
 	img_width: int,
 	img_height: int,
-	progress: WaterwaysProgressReporter,
+	progress: _WaterwaysProgressReporter,
 ) -> Array:  # Arraty of [Vector2i pixel, Vector3 world_pos]
 	const FINAL_PROGRESS: float = 45.0
 	const PROGRESS_FREQ: int = 30
@@ -203,8 +203,8 @@ static func generate_collision_positions(
 				var a := Vector3(uv2[offset_tris * 3].x, uv2[offset_tris * 3].y, 0.0)
 				var b := Vector3(uv2[offset_tris * 3 + 1].x, uv2[offset_tris * 3 + 1].y, 0.0)
 				var c := Vector3(uv2[offset_tris * 3 + 2].x, uv2[offset_tris * 3 + 2].y, 0.0)
-				baryatric_coords = WaterwaysHelperMethods.cart2bary(p, a, b, c)
-				if WaterwaysHelperMethods.point_in_bariatric(baryatric_coords):
+				baryatric_coords = _WaterwaysHelperMethods.cart2bary(p, a, b, c)
+				if _WaterwaysHelperMethods.point_in_bariatric(baryatric_coords):
 					correct_triangle = Vector3i(offset_tris * 3, offset_tris * 3 + 1, offset_tris * 3 + 2)
 					break # we have the correct triangle so we break out of loop
 
@@ -212,7 +212,7 @@ static func generate_collision_positions(
 				var vert0: Vector3 = world_verts[correct_triangle.x]
 				var vert1: Vector3 = world_verts[correct_triangle.y]
 				var vert2: Vector3 = world_verts[correct_triangle.z]
-				local.append([Vector2i(x, y), WaterwaysHelperMethods.bary2cart(vert0, vert1, vert2, baryatric_coords)])
+				local.append([Vector2i(x, y), _WaterwaysHelperMethods.bary2cart(vert0, vert1, vert2, baryatric_coords)])
 
 		mutex.lock()
 		column_results[x] = local
@@ -239,7 +239,7 @@ static func generate_collision_positions(
 
 
 # Adds offset margins so filters will correctly extend across UV edges
-static func add_margins(image : Image, resolution : int, margin : int) -> Image:
+static func add_margins(image: Image, resolution: int, margin: int) -> Image:
 	var with_margins_size := resolution + 2 * margin
 	
 	var image_with_margins := Image.create(with_margins_size, with_margins_size, true, Image.FORMAT_RGB8)
@@ -260,7 +260,7 @@ static func save_baked_texture(texture: Texture2D, node: Node, suffix: String) -
 		push_warning("Waterways: save the scene before baking so the '%s' map is stored on disk." % suffix)
 		return texture
 
-	var dir := scene_root.scene_file_path.get_basename() + WaterwaysConstants.TEXTURES_FOLDER_SUFFIX
+	var dir := scene_root.scene_file_path.get_basename() + _WaterwaysConstants.TEXTURES_FOLDER_SUFFIX
 	if not DirAccess.dir_exists_absolute(dir):
 		DirAccess.make_dir_recursive_absolute(dir)
 
@@ -290,7 +290,7 @@ static func _collect_baked_node_ids(scene_root: Node) -> Dictionary:
 
 static func _node_id_from_baked_filename(file_name: String) -> String:
 	var base := file_name.get_basename()
-	for suffix in WaterwaysConstants.BAKED_TEXTURE_SUFFIXES_MAP.values():
+	for suffix in _WaterwaysConstants.BAKED_TEXTURE_SUFFIXES_MAP.values():
 		if base.ends_with("_" + suffix):
 			return base.substr(0, base.length() - suffix.length() - 1)
 	return ""
@@ -303,7 +303,7 @@ static func find_orphaned_baked_textures(scene_root: Node) -> PackedStringArray:
 	if scene_root == null or scene_root.scene_file_path.is_empty():
 		return orphans
 
-	var dir_path := scene_root.scene_file_path.get_basename() + WaterwaysConstants.TEXTURES_FOLDER_SUFFIX
+	var dir_path := scene_root.scene_file_path.get_basename() + _WaterwaysConstants.TEXTURES_FOLDER_SUFFIX
 	var dir := DirAccess.open(dir_path)
 	if dir == null:
 		return orphans

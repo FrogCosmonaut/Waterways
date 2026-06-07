@@ -1,5 +1,5 @@
 @tool
-class_name WaterwaysCleanOrphanButton
+class_name _WaterwaysCleanOrphanButton
 extends Button
 
 const _MSG_EMPTY: String = "No unused baked texture files were found in the scene's _waterways folder."
@@ -19,7 +19,7 @@ func _ready() -> void:
 
 func _on_pressed() -> void:
 	var scene_root := EditorInterface.get_edited_scene_root()
-	_orphaned_textures = WaterwaysHelperMethods.find_orphaned_baked_textures(scene_root)
+	_orphaned_textures = _WaterwaysHelperMethods.find_orphaned_baked_textures(scene_root)
 
 	if _orphaned_textures.is_empty():
 		_confirm_dialog.dialog_text = _MSG_EMPTY
@@ -36,5 +36,5 @@ func _on_pressed() -> void:
 func _on_confirmation_dialog_confirmed() -> void:
 	if _orphaned_textures.is_empty():
 		return
-	WaterwaysHelperMethods.delete_baked_textures(_orphaned_textures)
+	_WaterwaysHelperMethods.delete_baked_textures(_orphaned_textures)
 	_orphaned_textures.clear()
