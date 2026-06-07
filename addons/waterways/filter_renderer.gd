@@ -4,19 +4,6 @@
 class_name WaterwaysFilterRenderer
 extends SubViewport
 
-const SHADER_FILTERS_DIR: String = "res://addons/waterways/shaders/filters"
-const DILATE_PASS1: String = "dilate_filter_pass1.gdshader"
-const DILATE_PASS2: String = "dilate_filter_pass2.gdshader"
-const DILATE_PASS3: String = "dilate_filter_pass3.gdshader"
-const NORMAL_MAP_PASS: String = "normal_map_pass.gdshader"
-const NORMAL_TO_FLOW_PASS: String = "normal_to_flow_filter.gdshader"
-const BLUR_PASS1: String = "blur_pass1.gdshader"
-const BLUR_PASS2: String = "blur_pass2.gdshader"
-const FOAM_PASS: String = "foam_pass.gdshader"
-const COMBINE_PASS: String = "combine_pass.gdshader"
-const DOTPRODUCT_PASS: String = "dotproduct.gdshader"
-const FLOW_PRESSURE_PASS: String = "flow_pressure_pass.gdshader"
-
 var dilate_pass_1_shader: Shader
 var dilate_pass_2_shader: Shader
 var dilate_pass_3_shader: Shader
@@ -34,17 +21,19 @@ var _color_rect: ColorRect
 
 
 func _enter_tree() -> void:
-	dilate_pass_1_shader = load(SHADER_FILTERS_DIR.path_join(DILATE_PASS1))
-	dilate_pass_2_shader = load(SHADER_FILTERS_DIR.path_join(DILATE_PASS2))
-	dilate_pass_3_shader = load(SHADER_FILTERS_DIR.path_join(DILATE_PASS3))
-	normal_map_pass_shader = load(SHADER_FILTERS_DIR.path_join(NORMAL_MAP_PASS))
-	normal_to_flow_pass_shader = load(SHADER_FILTERS_DIR.path_join(NORMAL_TO_FLOW_PASS))
-	blur_pass1_shader = load(SHADER_FILTERS_DIR.path_join(BLUR_PASS1))
-	blur_pass2_shader = load(SHADER_FILTERS_DIR.path_join(BLUR_PASS2))
-	foam_pass_shader = load(SHADER_FILTERS_DIR.path_join(FOAM_PASS))
-	combine_pass_shader = load(SHADER_FILTERS_DIR.path_join(COMBINE_PASS))
-	dotproduct_pass_shader = load(SHADER_FILTERS_DIR.path_join(DOTPRODUCT_PASS))
-	flow_pressure_pass_shader = load(SHADER_FILTERS_DIR.path_join(FLOW_PRESSURE_PASS))
+	const _FS := WaterwaysConstants.FilterShader
+
+	dilate_pass_1_shader = WaterwaysConstants.get_filter_shader(_FS.DILATE_PASS1)
+	dilate_pass_2_shader = WaterwaysConstants.get_filter_shader(_FS.DILATE_PASS2)
+	dilate_pass_3_shader = WaterwaysConstants.get_filter_shader(_FS.DILATE_PASS3)
+	normal_map_pass_shader = WaterwaysConstants.get_filter_shader(_FS.NORMAL_MAP_PASS)
+	normal_to_flow_pass_shader = WaterwaysConstants.get_filter_shader(_FS.NORMAL_TO_FLOW_PASS)
+	blur_pass1_shader = WaterwaysConstants.get_filter_shader(_FS.BLUR_PASS1)
+	blur_pass2_shader = WaterwaysConstants.get_filter_shader(_FS.BLUR_PASS2)
+	foam_pass_shader = WaterwaysConstants.get_filter_shader(_FS.FOAM_PASS)
+	combine_pass_shader = WaterwaysConstants.get_filter_shader(_FS.COMBINE_PASS)
+	dotproduct_pass_shader = WaterwaysConstants.get_filter_shader(_FS.DOTPRODUCT_PASS)
+	flow_pressure_pass_shader = WaterwaysConstants.get_filter_shader(_FS.FLOW_PRESSURE_PASS)
 
 	filter_mat = ShaderMaterial.new()
 	_color_rect = $ColorRect

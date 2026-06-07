@@ -4,25 +4,12 @@
 class_name WaterwaysSystemMapRenderer
 extends SubViewport
 
-const SHADER_RENDERS_DIR: String = "res://addons/waterways/shaders/system_renders"
-const HEIGHT_SHADER: String = "system_height.gdshader"
-const FLOW_SHADER: String = "system_flow.gdshader"
-const ALPHA_SHADER: String = "alpha.gdshader"
-
-var _cached_shaders := {}
-
 @onready var _camera: Camera3D = $Camera3D
 @onready var _container: Node3D = $Container
 
 
 func _setup_viewport(resolution: float) -> void:
 	size = Vector2(resolution, resolution)
-
-
-func _load_shader(shader_name: String) -> Shader:
-	if not _cached_shaders.has(shader_name):
-		_cached_shaders[shader_name] = load(SHADER_RENDERS_DIR.path_join(shader_name))
-	return _cached_shaders[shader_name]
 
 
 func _get_camera_pos(aabb: AABB, axis: int) -> Vector3:
@@ -64,7 +51,7 @@ func grab_height(water_objects: Array[WaterwaysRiver], aabb: AABB, resolution: f
 	_setup_viewport(resolution)
 
 	var height_mat := ShaderMaterial.new()
-	height_mat.shader = _load_shader(HEIGHT_SHADER)
+	height_mat.shader = WaterwaysConstants.get_render_shader(WaterwaysConstants.RenderShader.HEIGHT_SHADER)
 
 	height_mat.set_shader_parameter("lower_bounds", aabb.position.y)
 	height_mat.set_shader_parameter("upper_bounds", aabb.end.y)
@@ -87,7 +74,7 @@ func grab_alpha(water_objects: Array[WaterwaysRiver], aabb: AABB, resolution: fl
 	_setup_viewport(resolution)
 
 	var alpha_mat := ShaderMaterial.new()
-	alpha_mat.shader = _load_shader(FLOW_SHADER)
+	alpha_mat.shader = WaterwaysConstants.get_render_shader(WaterwaysConstants.RenderShader.FLOW_SHADER)
 
 	for object in water_objects:
 		var water_mesh_copy = object.mesh_instance.duplicate(true)
@@ -107,7 +94,7 @@ func grab_flow(water_objects: Array[WaterwaysRiver], aabb: AABB, resolution: flo
 	_setup_viewport(resolution)
 
 	var flow_mat := ShaderMaterial.new()
-	flow_mat.shader = _load_shader(FLOW_SHADER)
+	flow_mat.shader = WaterwaysConstants.get_render_shader(WaterwaysConstants.RenderShader.FLOW_SHADER)
 
 	for i in water_objects.size():
 		flow_mat.set_shader_parameter("flowmap", water_objects[i].flow_foam_noise)

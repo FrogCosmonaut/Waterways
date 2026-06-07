@@ -11,10 +11,6 @@ signal river_changed
 signal progress_notified
 
 const FILTER_RENDERER_PATH: String = "res://addons/waterways/filter_renderer.tscn"
-const FLOW_OFFSET_NOISE_TEXTURE_PATH: String = "res://addons/waterways/textures/flow_offset_noise.png"
-const FOAM_NOISE_PATH: String = "res://addons/waterways/textures/foam_noise.png"
-
-const RIVER_MESH_INSTANCE_NAME: String = "RiverMeshInstance"
 
 const SHADER_GROUP_NAME: String = "Shader"
 const SHADER_CATEGORIES = {
@@ -221,7 +217,7 @@ func _enter_tree() -> void:
 	set_materials("i_uv2_sides", _uv2_sides)
 	set_materials("i_distmap", dist_pressure)
 	set_materials("i_flowmap", flow_foam_noise)
-	set_materials("i_texture_foam_noise", load(FOAM_NOISE_PATH) as Texture2D)
+	set_materials("i_texture_foam_noise", WaterwaysConstants.get_foam_noise_texture())
 
 
 func _get_configuration_warnings() -> PackedStringArray:
@@ -493,7 +489,7 @@ func _generate_flowmap(flowmap_resolution: int) -> void:
 	var collision_with_margins := ImageTexture.create_from_image(image)
 
 	# Create correctly tiling noise for A channel
-	var noise_texture := load(FLOW_OFFSET_NOISE_TEXTURE_PATH) as Texture2D
+	var noise_texture := WaterwaysConstants.get_flow_noise_texture()
 	var noise_with_margin_size := float(_uv2_sides + 2) * (float(noise_texture.get_width()) / float(_uv2_sides))
 	var noise_with_tiling := Image.create(noise_with_margin_size, noise_with_margin_size, false, Image.FORMAT_RGB8)
 	var slice_width := float(noise_texture.get_width()) / float(_uv2_sides)

@@ -2,11 +2,11 @@
 # See `LICENSE.md` included in the source distribution for details.
 extends EditorProperty
 
-
 const GRADIENT_INSPECTOR_SCENE: PackedScene = preload("res://addons/waterways/gui/gradient_inspector.tscn")
 
 var _ui : WaterwaysGradientInspector
 var _updating := false
+
 
 func _init() -> void:
 	_ui = GRADIENT_INSPECTOR_SCENE.instantiate() as Control
@@ -17,7 +17,6 @@ func _init() -> void:
 
 
 func gradient_changed(_val) -> void:
-	print("gradient changed")
 	if _updating:
 		return
 	var value = _ui.get_value()
@@ -25,7 +24,6 @@ func gradient_changed(_val) -> void:
 
 
 func _update_property() -> void:
-	print("update_property in editor_property.gd")
 	var new_value = get_edited_object()[get_edited_property()]
 	_updating = true
 	_ui.set_value(new_value)

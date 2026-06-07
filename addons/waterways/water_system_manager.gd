@@ -14,7 +14,7 @@ const FILTER_RENDERER_SCENE: PackedScene = preload("./filter_renderer.tscn")
 @export var system_bake_resolution := WaterwaysConstants.BakeResolution._512
 ## This group name is assigned at runtime, it is used by the [WaterwaysBuoyant] node to find the [WaterwaysSystem].
 ## If you only have one [WaterwaysSystem], you can just leave this be.
-@export var system_group_name: StringName = &"waterways_system"
+@export var system_group_name: StringName = WaterwaysConstants.DEFAULT_SYSTEM_GROUP_NAME
 ## This is the value returned when an object queries the [WaterwaysSystem] heightmap,
 ## but hits outside the baked height data.
 @export var minimum_water_level: float = 0.0

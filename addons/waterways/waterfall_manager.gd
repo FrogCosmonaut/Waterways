@@ -62,7 +62,7 @@ func _enter_tree() -> void:
 
 	if get_child_count() <= 0:
 		var new_mesh_instance := MeshInstance3D.new()
-		new_mesh_instance.name = "WaterfallMeshInstance"
+		new_mesh_instance.name = WaterwaysConstants.WATERFALL_MESH_NAME
 		add_child(new_mesh_instance)
 		mesh_instance = get_child(0) as MeshInstance3D
 		_generate_waterfall()
