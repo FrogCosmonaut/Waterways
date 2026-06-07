@@ -92,12 +92,7 @@ func _on_selection_change() -> void:
 		if len(selected) == 0 or selected[0] != _edited_node:
 			_editor_selection.clear()
 			_editor_selection.add_node(_edited_node)
-			_show_river_control_panel()
-			_edited_node = selected[0] as WaterwaysRiver
-			_river_controls.menu.debug_view_menu_selected = _edited_node.debug_view
-			if not _edited_node.progress_notified.is_connected(_river_progress_notified):
-				_edited_node.progress_notified.connect(_river_progress_notified)
-			return
+		return
 
 	_hide_water_system_control_panel()
 	_hide_river_control_panel()
@@ -122,6 +117,8 @@ func _on_selection_change() -> void:
 func _on_scene_changed(scene_root) -> void:
 	_hide_river_control_panel()
 	_hide_water_system_control_panel()
+	# propagate the selection, e.g. when changing tabs with a river node selected
+	_on_selection_change()
 
 
 func _on_scene_closed(_value) -> void:

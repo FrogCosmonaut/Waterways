@@ -209,11 +209,11 @@ func _enter_tree() -> void:
 		curve.add_point(Vector3(0.0, 0.0, 0.0), Vector3(0.0, 0.0, -0.25), Vector3(0.0, 0.0, 0.25))
 		curve.add_point(Vector3(0.0, 0.0, 1.0), Vector3(0.0, 0.0, -0.25), Vector3(0.0, 0.0, 0.25))
 
-	mesh_instance = find_child(RIVER_MESH_INSTANCE_NAME) as MeshInstance3D
+	mesh_instance = find_child(WaterwaysConstants.RIVER_MESH_NAME, true, false) as MeshInstance3D
 	if not mesh_instance:
 		# This is what happens on creating a new river
 		mesh_instance = MeshInstance3D.new()
-		mesh_instance.name = RIVER_MESH_INSTANCE_NAME
+		mesh_instance.name = WaterwaysConstants.RIVER_MESH_NAME
 		add_child(mesh_instance)
 		_generate_river()
 	else:
