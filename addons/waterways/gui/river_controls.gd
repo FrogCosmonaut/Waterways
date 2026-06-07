@@ -58,6 +58,7 @@ func _ready() -> void:
 		return
 
 	_load_editor_icons()
+	_on_lock_selection_toggled(_lock_selection_button.button_pressed)
 
 
 func _load_editor_icons() -> void:
@@ -73,7 +74,6 @@ func _load_editor_icons() -> void:
 	_debug_button.icon = gui.get_theme_icon("Debug", "EditorIcons")
 	_lock_icon_open = gui.get_theme_icon("Unlock", "EditorIcons")
 	_lock_icon_closed = gui.get_theme_icon("Lock", "EditorIcons")
-	_on_lock_selection_toggled(_lock_selection_button.disabled)
 
 
 func spatial_gui_input(event: InputEvent) -> bool:

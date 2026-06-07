@@ -4,37 +4,14 @@
 class_name _WaterwaysFilterRenderer
 extends SubViewport
 
-var dilate_pass_1_shader: Shader
-var dilate_pass_2_shader: Shader
-var dilate_pass_3_shader: Shader
-var normal_map_pass_shader: Shader
-var normal_to_flow_pass_shader: Shader
-var blur_pass1_shader: Shader
-var blur_pass2_shader: Shader
-var foam_pass_shader: Shader
-var combine_pass_shader: Shader
-var dotproduct_pass_shader: Shader
-var flow_pressure_pass_shader: Shader
+var _WC := _WaterwaysConstants
+const _FS := _WaterwaysConstants.FilterShader
 
 var filter_mat: ShaderMaterial
 var _color_rect: ColorRect
 
 
 func _enter_tree() -> void:
-	const _FS := _WaterwaysConstants.FilterShader
-
-	dilate_pass_1_shader = _WaterwaysConstants.get_filter_shader(_FS.DILATE_PASS1)
-	dilate_pass_2_shader = _WaterwaysConstants.get_filter_shader(_FS.DILATE_PASS2)
-	dilate_pass_3_shader = _WaterwaysConstants.get_filter_shader(_FS.DILATE_PASS3)
-	normal_map_pass_shader = _WaterwaysConstants.get_filter_shader(_FS.NORMAL_MAP_PASS)
-	normal_to_flow_pass_shader = _WaterwaysConstants.get_filter_shader(_FS.NORMAL_TO_FLOW_PASS)
-	blur_pass1_shader = _WaterwaysConstants.get_filter_shader(_FS.BLUR_PASS1)
-	blur_pass2_shader = _WaterwaysConstants.get_filter_shader(_FS.BLUR_PASS2)
-	foam_pass_shader = _WaterwaysConstants.get_filter_shader(_FS.FOAM_PASS)
-	combine_pass_shader = _WaterwaysConstants.get_filter_shader(_FS.COMBINE_PASS)
-	dotproduct_pass_shader = _WaterwaysConstants.get_filter_shader(_FS.DOTPRODUCT_PASS)
-	flow_pressure_pass_shader = _WaterwaysConstants.get_filter_shader(_FS.FLOW_PRESSURE_PASS)
-
 	filter_mat = ShaderMaterial.new()
 	_color_rect = $ColorRect
 	_color_rect.material = filter_mat
@@ -63,12 +40,12 @@ func apply_combine(r_texture: Texture2D, g_texture: Texture2D, b_texture: Textur
 		"b_texture": b_texture,
 		"a_texture": a_texture,
 	}
-	return await _execute_pass(combine_pass_shader, r_texture.get_size(), params)
+	return await _execute_pass(_WC.get_filter_shader(_FS.COMBINE_PASS), r_texture.get_size(), params)
 
 
 func apply_dotproduct(input_texture: Texture2D, resolution: float) -> ImageTexture:
 	var params: Dictionary = {"input_texture": input_texture}
-	return await _execute_pass(dotproduct_pass_shader, input_texture.get_size(), params)
+	return await _execute_pass(_WC.get_filter_shader(_FS.DOTPRODUCT_PASS), input_texture.get_size(), params)
 
 
 func apply_flow_pressure(input_texture: Texture2D, resolution: float, rows: float) -> ImageTexture:
@@ -77,7 +54,7 @@ func apply_flow_pressure(input_texture: Texture2D, resolution: float, rows: floa
 		"size": resolution,
 		"rows": rows,
 	}
-	return await _execute_pass(flow_pressure_pass_shader, input_texture.get_size(), params)
+	return await _execute_pass(_WC.get_filter_shader(_FS.FLOW_PRESSURE_PASS), input_texture.get_size(), params)
 
 
 func apply_foam(input_texture: Texture2D, distance: float, cutoff: float, resolution: float) -> ImageTexture:
@@ -87,7 +64,7 @@ func apply_foam(input_texture: Texture2D, distance: float, cutoff: float, resolu
 		"offset": distance,
 		"cutoff": cutoff,
 	}
-	return await _execute_pass(foam_pass_shader, input_texture.get_size(), params)
+	return await _execute_pass(_WC.get_filter_shader(_FS.FOAM_PASS), input_texture.get_size(), params)
 
 
 func apply_blur(input_texture: Texture2D, blur: float, resolution: float) -> ImageTexture:
@@ -96,11 +73,11 @@ func apply_blur(input_texture: Texture2D, blur: float, resolution: float) -> Ima
 		"size": resolution,
 		"blur": blur,
 	}
-	var pass1_result := await _execute_pass(blur_pass1_shader, input_texture.get_size(), params)
+	var pass1_result := await _execute_pass(_WC.get_filter_shader(_FS.BLUR_PASS1), input_texture.get_size(), params)
 
 	# Pass 2
 	params["input_texture"] = pass1_result
-	return await _execute_pass(blur_pass2_shader, input_texture.get_size(), params)
+	return await _execute_pass(_WC.get_filter_shader(_FS.BLUR_PASS2), input_texture.get_size(), params)
 
 
 func apply_vertical_blur(input_texture: Texture2D, blur: float, resolution: float) -> ImageTexture:
@@ -109,7 +86,7 @@ func apply_vertical_blur(input_texture: Texture2D, blur: float, resolution: floa
 		"size": resolution,
 		"blur": blur,
 	}
-	return await _execute_pass(blur_pass2_shader, input_texture.get_size(), params)
+	return await _execute_pass(_WC.get_filter_shader(_FS.BLUR_PASS2), input_texture.get_size(), params)
 
 
 func apply_normal_to_flow(input_texture: Texture2D, resolution: float) -> ImageTexture:
@@ -117,7 +94,7 @@ func apply_normal_to_flow(input_texture: Texture2D, resolution: float) -> ImageT
 		"input_texture": input_texture,
 		"size": resolution,
 	}
-	return await _execute_pass(normal_to_flow_pass_shader, input_texture.get_size(), params)
+	return await _execute_pass(_WC.get_filter_shader(_FS.NORMAL_TO_FLOW_PASS), input_texture.get_size(), params)
 
 
 func apply_normal(input_texture: Texture2D, resolution: float) -> ImageTexture:
@@ -125,7 +102,7 @@ func apply_normal(input_texture: Texture2D, resolution: float) -> ImageTexture:
 		"input_texture": input_texture,
 		"size": resolution,
 	}
-	return await _execute_pass(normal_map_pass_shader, input_texture.get_size(), params)
+	return await _execute_pass(_WC.get_filter_shader(_FS.NORMAL_MAP_PASS), input_texture.get_size(), params)
 
 
 func apply_dilate(input_texture: Texture2D, dilation: float, fill: float, resolution: float, fill_texture: Texture2D = null) -> ImageTexture:
@@ -134,14 +111,14 @@ func apply_dilate(input_texture: Texture2D, dilation: float, fill: float, resolu
 		"size": resolution,
 		"dilation": dilation,
 	}
-	var pass1_result := await _execute_pass(dilate_pass_1_shader, input_texture.get_size(), params)
+	var pass1_result := await _execute_pass(_WC.get_filter_shader(_FS.DILATE_PASS1), input_texture.get_size(), params)
 
 	# Pass 2
 	params["input_texture"] = pass1_result
-	var pass2_result = await _execute_pass(dilate_pass_2_shader, input_texture.get_size(), params)
+	var pass2_result = await _execute_pass(_WC.get_filter_shader(_FS.DILATE_PASS2), input_texture.get_size(), params)
 
 	params["distance_texture"] = pass2_result
 	params["fill"] = fill
 	if fill_texture:
 		params["color_texture"] = fill_texture
-	return await _execute_pass(dilate_pass_3_shader, input_texture.get_size(), params)
+	return await _execute_pass(_WC.get_filter_shader(_FS.DILATE_PASS3), input_texture.get_size(), params)

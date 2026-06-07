@@ -93,10 +93,10 @@ func grab_alpha(water_objects: Array[WaterwaysRiver], aabb: AABB, resolution: fl
 func grab_flow(water_objects: Array[WaterwaysRiver], aabb: AABB, resolution: float) -> ImageTexture:
 	_setup_viewport(resolution)
 
-	var flow_mat := ShaderMaterial.new()
-	flow_mat.shader = _WaterwaysConstants.get_render_shader(_WaterwaysConstants.RenderShader.FLOW_SHADER)
-
 	for i in water_objects.size():
+		var flow_mat := ShaderMaterial.new()
+		flow_mat.shader = _WaterwaysConstants.get_render_shader(_WaterwaysConstants.RenderShader.FLOW_SHADER)
+
 		flow_mat.set_shader_parameter("flowmap", water_objects[i].flow_foam_noise)
 		flow_mat.set_shader_parameter("distmap", water_objects[i].dist_pressure)
 		flow_mat.set_shader_parameter("flow_base", water_objects[i].get_shader_parameter("flow_base"))

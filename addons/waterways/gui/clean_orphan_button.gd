@@ -2,7 +2,7 @@
 class_name _WaterwaysCleanOrphanButton
 extends Button
 
-const _MSG_EMPTY: String = "No unused baked texture files were found in the scene's _waterways folder."
+const _MSG_EMPTY: String = "No unused baked texture files were found in the scene's textures folder."
 const _MSG_CONFIRM: String = "The following baked texture files no longer belong to any river or system in this scene and will be permanently deleted:\n\n%s"
 
 var _orphaned_textures: PackedStringArray = []

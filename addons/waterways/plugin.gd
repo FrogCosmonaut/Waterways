@@ -64,6 +64,7 @@ func _exit_tree() -> void:
 	remove_node_3d_gizmo_plugin(river_gizmo)
 	remove_node_3d_gizmo_plugin(waterfall_gizmo)
 	remove_inspector_plugin(gradient_inspector)
+	_river_controls.constraint_selected.disconnect(_on_river_controls_constraint_selected)
 	_river_controls.mode_changed.disconnect(_on_river_controls_mode_changed)
 	_river_controls.options_changed.disconnect(_on_river_controls_options_changed)
 	_editor_selection.selection_changed.disconnect(_on_selection_change)

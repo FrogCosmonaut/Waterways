@@ -227,6 +227,11 @@ func _enter_tree() -> void:
 	set_materials("i_texture_foam_noise", _WaterwaysConstants.get_foam_noise_texture())
 
 
+func _exit_tree() -> void:
+	if is_instance_valid(_defaults):
+		_defaults.queue_free()
+
+
 func _get_configuration_warnings() -> PackedStringArray:
 	if valid_flowmap:
 		return []
@@ -318,7 +323,7 @@ func spawn_mesh() -> void:
 		push_warning("Cannot create MeshInstance3D sibling when River is root.")
 		return
 	var sibling_mesh := mesh_instance.duplicate(true)
-	add_child(sibling_mesh)
+	get_parent().add_child(sibling_mesh)
 	sibling_mesh.set_owner(get_tree().get_edited_scene_root())
 	sibling_mesh.position = position
 	sibling_mesh.material_override = null

@@ -179,7 +179,7 @@ func get_water_altitude(query_pos: Vector3) -> float:
 	var color: Color = _sample_system_map(query_pos)
 	if color == Color.BLACK:
 		# We hit the empty part of the System Map
-		return min(query_pos.y, minimum_water_level)
+		return minimum_water_level - query_pos.y
 
 	# Throw a warning if the map is not baked
 	var height: float = color.b * _system_aabb.size.y + _system_aabb.position.y
