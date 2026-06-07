@@ -15,6 +15,7 @@ var _river_controls = RIVER_CONTROLS_SCENE.instantiate()
 var _water_system_controls = WATER_SYSTEM_CONTROLS_SCENE.instantiate()
 var _edited_node = null
 var _progress_window: WaterwaysProgressWindow = null
+var _progress_signal_emitter: Object = null
 var _editor_selection : EditorSelection = null
 var _mode := WaterwaysRiverControls.Mode.SELECT
 var constraint := WaterwaysRiverControls.Constraint.NONE
@@ -32,7 +33,7 @@ func _enter_tree() -> void:
 	_river_controls.mode_changed.connect(_on_river_controls_mode_changed)
 	_river_controls.options_changed.connect(_on_river_controls_options_changed)
 	_progress_window = PROGRESS_WINDOW_SCENE.instantiate()
-	_river_controls.add_child(_progress_window)
+	add_child(_progress_window)
 	_editor_selection = EditorInterface.get_selection()
 	_editor_selection.selection_changed.connect(_on_selection_change)
 	scene_changed.connect(_on_scene_changed)
@@ -51,8 +52,12 @@ func _on_debug_view_changed(index : int) -> void:
 	_edited_node.set_debug_view(index)
 
 
-func _on_generate_system_maps_pressed() -> void:
+func _on_generate_system_maps_requested() -> void:
 	_edited_node.generate_system_maps()
+
+
+func _on_bake_children_requested() -> void:
+	_edited_node.bake_all_children()
 
 
 func _exit_tree() -> void:
@@ -99,12 +104,17 @@ func _on_selection_change() -> void:
 
 	if selected.is_empty():
 		return
+
+	if selected[0].has_signal("progress_notified") and selected[0] != _progress_signal_emitter:
+		if is_instance_valid(_progress_signal_emitter) and _progress_signal_emitter.progress_notified.is_connected(_progress_notified):
+			_progress_signal_emitter.progress_notified.disconnect(_progress_notified)
+		selected[0].progress_notified.connect(_progress_notified)
+		_progress_signal_emitter = selected[0]
+
 	if selected[0] is WaterwaysRiver:
 		_show_river_control_panel()
 		_edited_node = selected[0] as WaterwaysRiver
 		_river_controls.debug_view_menu_selected = _edited_node.debug_view
-		if not _edited_node.progress_notified.is_connected(_river_progress_notified):
-			_edited_node.progress_notified.connect(_river_progress_notified)
 	elif selected[0] is WaterwaysWaterfall:
 		_edited_node = selected[0] as WaterwaysWaterfall
 	elif selected[0] is WaterwaysSystem:
@@ -310,7 +320,7 @@ func _forward_3d_gui_input_river(camera: Camera3D, event: InputEvent) -> int:
 	return AFTER_GUI_INPUT_PASS
 
 
-func _river_progress_notified(progress: float, message: String) -> void:
+func _progress_notified(progress: float, message: String) -> void:
 	if not _progress_window.visible:
 		_progress_window.popup_centered()
 
@@ -346,10 +356,12 @@ func _hide_river_control_panel() -> void:
 func _show_water_system_control_panel() -> void:
 	if not _water_system_controls.get_parent():
 		add_control_to_container(CONTAINER_SPATIAL_EDITOR_MENU, _water_system_controls)
-		_water_system_controls.menu.generate_system_maps.connect(_on_generate_system_maps_pressed)
+		_water_system_controls.generate_system_maps_requested.connect(_on_generate_system_maps_requested)
+		_water_system_controls.bake_children_requested.connect(_on_bake_children_requested)
 
 
 func _hide_water_system_control_panel() -> void:
 	if _water_system_controls.get_parent():
 		remove_control_from_container(CONTAINER_SPATIAL_EDITOR_MENU, _water_system_controls)
-		_water_system_controls.menu.generate_system_maps.disconnect(_on_generate_system_maps_pressed)
+		_water_system_controls.generate_system_maps_requested.disconnect(_on_generate_system_maps_requested)
+		_water_system_controls.bake_children_requested.disconnect(_on_bake_children_requested)

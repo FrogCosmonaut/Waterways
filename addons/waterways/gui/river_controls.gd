@@ -33,7 +33,6 @@ enum Constraint {
 	PLANE_XY,
 }
 
-
 var debug_view_menu_selected: int = 0
 var constraint := Constraint.NONE
 
@@ -59,11 +58,6 @@ func _ready() -> void:
 		return
 
 	_load_editor_icons()
-
-
-func _enter_tree() -> void:
-	if not is_node_ready():
-		await ready
 
 
 func _load_editor_icons() -> void:

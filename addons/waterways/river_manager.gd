@@ -8,7 +8,7 @@ extends Node3D
 # river_changed used to update handles when values are changed on script side
 # progress_notified used to up progress bar when baking maps
 signal river_changed
-signal progress_notified
+signal progress_notified(percentage: float, message: String)
 
 const FILTER_RENDERER_PATH: String = "res://addons/waterways/filter_renderer.tscn"
 
@@ -273,7 +273,7 @@ func remove_point(index: int) -> void:
 
 func bake_texture() -> void:
 	_generate_river()
-	_generate_flowmap(baking_resolution)
+	await _generate_flowmap(baking_resolution)
 
 
 func set_curve_point_position(index: int, position: Vector3) -> void:
