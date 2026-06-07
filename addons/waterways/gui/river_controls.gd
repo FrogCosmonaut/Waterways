@@ -5,7 +5,8 @@ class_name WaterwaysRiverControls
 extends HBoxContainer
 
 signal mode_changed(mode: Mode)
-signal options_changed(option: Option)
+signal constraint_selected(constraint: Constraint)
+signal options_changed(option: Option, value: bool)
 
 enum Mode {
 	SELECT,
@@ -19,7 +20,7 @@ enum Option {
 	LOCK_SELECTION,
 }
 
-enum CONSTRAINTS {
+enum Constraint {
 	NONE,
 	COLLIDERS,
 	AXIS_X,
@@ -64,42 +65,41 @@ func _load_editor_icons() -> void:
 func spatial_gui_input(event: InputEvent) -> bool:
 	# This uses the forwarded spatial input in order to not react to events
 	# while the spatial editor is not in focus
-	
+
 	# This is to avoid that the contraints are toggled while navigating 
 	# the scene with WASD holding the right mouse button
 	if event is InputEventMouseButton:
 		_mouse_down = event.pressed
-	
+
 	if event is InputEventKey and event.is_pressed() and not constraints.disabled:
-		
 		# Early exit if any of the modifiers (except shift) is pressed to not
 		# override default shortcuts like Ctrl + Z
 		if event.alt_pressed or event.ctrl_pressed or event.meta_pressed or _mouse_down:
 			return false
-		
+
 		# Handle local mode keybinding for toggling
 		if event.keycode == KEY_T:
 			# Set the input as handled to prevent default actions from the keys
 			_local_mode.button_pressed = not _local_mode.button_pressed
 			get_viewport().set_input_as_handled()
 			return true
-		
+
 		# Fetch the constraint that the user requested to toggle
 		var requested: int
 		match [event.keycode, event.shift_pressed]:
-			[KEY_S, _]: requested = CONSTRAINTS.COLLIDERS
-			[KEY_X, false]: requested = CONSTRAINTS.AXIS_X
-			[KEY_Y, false]: requested = CONSTRAINTS.AXIS_Y
-			[KEY_Z, false]: requested = CONSTRAINTS.AXIS_Z
-			[KEY_X, true]: requested = CONSTRAINTS.PLANE_YZ
-			[KEY_Y, true]: requested = CONSTRAINTS.PLANE_XZ
-			[KEY_Z, true]: requested = CONSTRAINTS.PLANE_XY
+			[KEY_S, _]: requested = Constraint.COLLIDERS
+			[KEY_X, false]: requested = Constraint.AXIS_X
+			[KEY_Y, false]: requested = Constraint.AXIS_Y
+			[KEY_Z, false]: requested = Constraint.AXIS_Z
+			[KEY_X, true]: requested = Constraint.PLANE_YZ
+			[KEY_Y, true]: requested = Constraint.PLANE_XZ
+			[KEY_Z, true]: requested = Constraint.PLANE_XY
 			_: return false
-		
+
 		# If the user requested the current selection, we toggle it instead to off
 		if requested == constraints.selected:
-			requested = CONSTRAINTS.NONE
-		
+			requested = Constraint.NONE
+
 		# Update the OptionsButton and call the signal callback as that is
 		# only automatically called when the user clicks it
 		constraints.select(requested)
@@ -108,7 +108,7 @@ func spatial_gui_input(event: InputEvent) -> bool:
 		# Set the input as handled to prevent default actions from the keys
 		get_viewport().set_input_as_handled()
 		return true
-	
+
 	return false
 
 
@@ -134,7 +134,7 @@ func _on_remove() -> void:
 
 
 func _on_constraint_selected(index: int) -> void:
-	options_changed.emit(Option.CONSTRAINT, index)
+	constraint_selected.emit(index)
 
 
 func _on_local_mode_toggled(enabled: bool) -> void:

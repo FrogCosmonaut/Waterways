@@ -17,7 +17,7 @@ var _edited_node = null
 var _progress_window: WaterwaysProgressWindow = null
 var _editor_selection : EditorSelection = null
 var _mode := WaterwaysRiverControls.Mode.SELECT
-var constraint: int = WaterwaysRiverControls.CONSTRAINTS.NONE
+var constraint := WaterwaysRiverControls.Constraint.NONE
 var local_editing := false
 var selection_locked := false
 
@@ -28,6 +28,7 @@ func _enter_tree() -> void:
 	add_inspector_plugin(gradient_inspector)
 	river_gizmo.editor_plugin = self
 	waterfall_gizmo.editor_plugin = self
+	_river_controls.constraint_selected.connect(_on_river_controls_constraint_selected)
 	_river_controls.mode_changed.connect(_on_river_controls_mode_changed)
 	_river_controls.options_changed.connect(_on_river_controls_options_changed)
 	_progress_window = PROGRESS_WINDOW_SCENE.instantiate()
@@ -59,7 +60,7 @@ func _exit_tree() -> void:
 	remove_node_3d_gizmo_plugin(waterfall_gizmo)
 	remove_inspector_plugin(gradient_inspector)
 	_river_controls.mode_changed.disconnect(_on_river_controls_mode_changed)
-	_river_controls.options.disconnect(_on_river_controls_options_changed)
+	_river_controls.options_changed.disconnect(_on_river_controls_options_changed)
 	_editor_selection.selection_changed.disconnect(_on_selection_change)
 	scene_changed.disconnect(_on_scene_changed)
 	scene_closed.disconnect(_on_scene_closed)
@@ -128,21 +129,20 @@ func _on_scene_closed(_value) -> void:
 	_hide_water_system_control_panel()
 
 
+func _on_river_controls_constraint_selected(value: WaterwaysRiverControls.Constraint) -> void:
+	constraint = value
+
+
 func _on_river_controls_mode_changed(new_mode: WaterwaysRiverControls.Mode) -> void:
 	_mode = new_mode
 
 
-func _on_river_controls_options_changed(option: WaterwaysRiverControls.Option, value) -> void:
-	if option == WaterwaysRiverControls.Option.CONSTRAINT:
-		constraint = value  # TODO: here is receiving either a bool or an int, check how to solve this.
-		if constraint == WaterwaysRiverControls.CONSTRAINTS.COLLIDERS:
-			# WaterwaysHelperMethods.reset_all_colliders(_edited_node.get_tree().root)
-			# TODO - figure out if this is needed any more
-			pass
-	elif option == WaterwaysRiverControls.Option.LOCAL_MODE:
-		local_editing = value
-	elif option == WaterwaysRiverControls.Option.LOCK_SELECTION:
-		selection_locked = value
+func _on_river_controls_options_changed(option: WaterwaysRiverControls.Option, value: bool) -> void:
+	match option:
+		WaterwaysRiverControls.Option.LOCAL_MODE:
+			local_editing = value
+		WaterwaysRiverControls.Option.LOCK_SELECTION:
+			selection_locked = value
 
 
 func _forward_3d_gui_input(camera: Camera3D, event: InputEvent) -> int:
@@ -229,7 +229,7 @@ func _forward_3d_gui_input_river(camera: Camera3D, event: InputEvent) -> int:
 
 				var plane := Plane(end_pos_global, end_pos_global + camera.transform.basis.x, end_pos_global + camera.transform.basis.y)
 				var new_pos
-				if constraint == WaterwaysRiverControls.CONSTRAINTS.COLLIDERS:
+				if constraint == WaterwaysRiverControls.Constraint.COLLIDERS:
 					var space_state = _edited_node.get_world_3d().direct_space_state
 					var ray_params = PhysicsRayQueryParameters3D.create(ray_from, ray_from + ray_dir * 4096)
 					var result = space_state.intersect_ray(ray_params)
@@ -237,7 +237,7 @@ func _forward_3d_gui_input_river(camera: Camera3D, event: InputEvent) -> int:
 						new_pos = result.position
 					else:
 						return AFTER_GUI_INPUT_PASS
-				elif constraint == WaterwaysRiverControls.CONSTRAINTS.NONE:
+				elif constraint == WaterwaysRiverControls.Constraint.NONE:
 					new_pos = plane.intersects_ray(ray_from, ray_from + ray_dir * 4096)
 
 				elif constraint in WaterwaysRiverGizmo.AXIS_MAPPING:
