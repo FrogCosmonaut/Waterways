@@ -5,8 +5,6 @@
 class_name WaterwaysSystem
 extends Node3D
 
-signal progress_notified(percentage: float, message: String)
-
 const SYSTEM_MAP_RENDERER_SCENE: PackedScene = preload("./system_map_renderer.tscn")
 const FILTER_RENDERER_SCENE: PackedScene = preload("./filter_renderer.tscn")
 
@@ -43,6 +41,9 @@ var _system_img: Image:
 			_system_img_size = value.get_width()
 
 var _first_enter_tree: bool = true
+
+## Reports bake progress to the editor. See [WaterwaysProgressReporter].
+var progress := WaterwaysProgressReporter.new(self)
 
 # Cached longest_axis_size. Updated only when _system_aab is changed.
 var _system_aabb_longest_axis_size: float
@@ -94,11 +95,6 @@ func _sample_system_map(query_pos: Vector3) -> Color:
 
 
 ## Emits the bake progress signal and yields a frame so the progressbar shows correctly.
-func _notify_progress(percentage: float) -> void:
-	progress_notified.emit(percentage, "Generating system maps.")
-	await get_tree().process_frame
-
-
 func bake_all_children() -> void:
 	var rivers: Array[WaterwaysRiver] = []
 	for child in get_children():
@@ -108,18 +104,15 @@ func bake_all_children() -> void:
 	for i in rivers.size():
 		var river := rivers[i]
 		# connect to river progress_notified to relay the progress bar to show n/n progress
-		var relay_progress := func(percentage: float, message: String) -> void:
-			progress_notified.emit(
-				(float(i) + percentage / 100.0) / float(rivers.size()) * 100.0,
-				"[%s %d/%d] %s" % [river.name, i + 1, rivers.size(), message]
-			)
-		river.progress_notified.connect(relay_progress)
+		var span := 100.0 / float(rivers.size())
+		var prefix := "[%s %d/%d] " % [river.name, i + 1, rivers.size()]
+		progress.chain_from(river.progress, float(i) * span, span, prefix)
 		await river.bake_texture()
-		river.progress_notified.disconnect(relay_progress)
+		progress.end_chain()
 
 
 func generate_system_maps() -> void:
-	await _notify_progress(0.0)
+	await progress.report_and_wait(0.0, "Generating system maps.")
 	var rivers: Array[WaterwaysRiver]
 
 	for child in get_children():
@@ -154,7 +147,7 @@ func generate_system_maps() -> void:
 
 	remove_child(filter_renderer)
 
-	await _notify_progress(50.0)
+	await progress.report_and_wait(50.0, "Generating system maps.")
 
 	# give the map and coordinates to all nodes in the wet_group
 	var wet_nodes := get_tree().get_nodes_in_group(wet_group_name)
@@ -174,7 +167,7 @@ func generate_system_maps() -> void:
 			material.set_shader_parameter("water_systemmap", system_map)
 			material.set_shader_parameter("water_systemmap_coords", get_system_map_coordinates())
 
-	await _notify_progress(100.0)
+	await progress.report_and_wait(100.0, "Generating system maps.")
 
 
 ## Returns the vertical distance to the water, positive values above water level,

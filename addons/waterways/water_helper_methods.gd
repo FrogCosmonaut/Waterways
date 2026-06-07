@@ -157,7 +157,7 @@ static func generate_collision_positions(
 	step_width_divs: int,
 	img_width: int,
 	img_height: int,
-	river: WaterwaysRiver,
+	progress: WaterwaysProgressReporter,
 ) -> Array:  # Arraty of [Vector2i pixel, Vector3 world_pos]
 	const FINAL_PROGRESS: float = 45.0
 	const PROGRESS_FREQ: int = 30
@@ -219,15 +219,13 @@ static func generate_collision_positions(
 		var done: int = counter[0]
 		mutex.unlock()
 		if done % PROGRESS_FREQ == 0 or done == img_width:
-			river.call_deferred(
-				"emit_signal", "progress_notified",
+			progress.report_deferred(
 				FINAL_PROGRESS * float(done) / float(img_width),
 				"Calculating Collisions (%sx%s)" % [img_width, img_height]
 			)
 
-	river.call_deferred(
-		"emit_signal", "progress_notified", 0.0,
-		"Calculating Collisions (%sx%s)" % [img_width, img_height]
+	progress.report_deferred(
+		0.0, "Calculating Collisions (%sx%s)" % [img_width, img_height]
 	)
 	var task_id := WorkerThreadPool.add_group_task(process_column, img_width, -1, false, "Waterways collision positions")
 	WorkerThreadPool.wait_for_group_task_completion(task_id)

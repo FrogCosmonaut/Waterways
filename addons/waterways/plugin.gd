@@ -15,7 +15,7 @@ var _river_controls = RIVER_CONTROLS_SCENE.instantiate()
 var _water_system_controls = WATER_SYSTEM_CONTROLS_SCENE.instantiate()
 var _edited_node = null
 var _progress_window: WaterwaysProgressWindow = null
-var _progress_signal_emitter: Object = null
+var _progress_reporter: WaterwaysProgressReporter = null
 var _editor_selection : EditorSelection = null
 var _mode := WaterwaysRiverControls.Mode.SELECT
 var constraint := WaterwaysRiverControls.Constraint.NONE
@@ -105,11 +105,12 @@ func _on_selection_change() -> void:
 	if selected.is_empty():
 		return
 
-	if selected[0].has_signal("progress_notified") and selected[0] != _progress_signal_emitter:
-		if is_instance_valid(_progress_signal_emitter) and _progress_signal_emitter.progress_notified.is_connected(_progress_notified):
-			_progress_signal_emitter.progress_notified.disconnect(_progress_notified)
-		selected[0].progress_notified.connect(_progress_notified)
-		_progress_signal_emitter = selected[0]
+	var reporter := selected[0].get("progress") as WaterwaysProgressReporter
+	if reporter and reporter != _progress_reporter:
+		if is_instance_valid(_progress_reporter) and _progress_reporter.progress_notified.is_connected(_progress_notified):
+			_progress_reporter.progress_notified.disconnect(_progress_notified)
+		reporter.progress_notified.connect(_progress_notified)
+		_progress_reporter = reporter
 
 	if selected[0] is WaterwaysRiver:
 		_show_river_control_panel()
@@ -322,7 +323,7 @@ func _forward_3d_gui_input_river(camera: Camera3D, event: InputEvent) -> int:
 
 func _progress_notified(progress: float, message: String) -> void:
 	if not _progress_window.visible:
-		_progress_window.popup_centered()
+		_popup_progress_centered()
 
 	_progress_window.show_progress(message, progress)
 
@@ -331,6 +332,17 @@ func _progress_notified(progress: float, message: String) -> void:
 		# instead of closing the instant we reach 100%.
 		await get_tree().create_timer(0.5).timeout
 		_progress_window.hide()
+
+
+func _popup_progress_centered() -> void:
+	var editor_window := EditorInterface.get_base_control().get_window()
+	var popup_size := _progress_window.size
+	if _progress_window.is_embedded():
+		_progress_window.position = (editor_window.size - popup_size) / 2
+	else:
+		# Native OS window: position is in absolute screen coordinates.
+		_progress_window.position = editor_window.position + (editor_window.size - popup_size) / 2
+	_progress_window.popup()
 
 
 func _show_river_control_panel() -> void:

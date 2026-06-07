@@ -6,9 +6,7 @@ class_name WaterwaysRiver
 extends Node3D
 
 # river_changed used to update handles when values are changed on script side
-# progress_notified used to up progress bar when baking maps
 signal river_changed
-signal progress_notified(percentage: float, message: String)
 
 const FILTER_RENDERER_PATH: String = "res://addons/waterways/filter_renderer.tscn"
 
@@ -84,6 +82,9 @@ var _debug_material: ShaderMaterial
 var _first_enter_tree := true
 var _filter_renderer: PackedScene
 var _defaults: WaterwaysRiver
+
+## Reports bake progress to the editor. See [WaterwaysProgressReporter].
+var progress := WaterwaysProgressReporter.new(self)
 
 # Serialised private variables
 @export_storage var _material: ShaderMaterial
@@ -401,12 +402,6 @@ func set_lod0_distance(value: float) -> void:
 
 #region Private Methods
 
-## Emits the bake progress signal and yields a frame so the progressbar shows correctly.
-func _notify_progress(percentage: float, message: String) -> void:
-	progress_notified.emit(percentage, message)
-	await get_tree().process_frame
-
-
 func _generate_river() -> void:
 	var average_width := WaterwaysHelperMethods.sum_array(widths) / (float(widths.size()) / 2.0)
 	_steps = int( max(1.0, round(curve.get_baked_length() / average_width)) )
@@ -428,7 +423,7 @@ func _generate_flowmap(flowmap_resolution: int) -> void:
 	var collision_res := res / 2 if baking_half_res_collision else res
 	var image := Image.create(collision_res, collision_res, true, Image.FORMAT_RGB8)
 	image.fill(Color.BLACK)
-	await _notify_progress(0.0, "Calculating Collisions (%sx%s)" % [collision_res, collision_res])
+	await progress.report_and_wait(0.0, "Calculating Collisions (%sx%s)" % [collision_res, collision_res])
 
 	var global_trans: Transform3D = mesh_instance.global_transform
 	var mesh_arrays: Array = mesh_instance.mesh.surface_get_arrays(0)
@@ -438,7 +433,7 @@ func _generate_flowmap(flowmap_resolution: int) -> void:
 	baker_thread.start(
 		WaterwaysHelperMethods.generate_collision_positions.bind(
 			global_trans, mesh_arrays, _steps,
-			shape_step_length_divs, shape_step_width_divs, collision_res, collision_res, self
+			shape_step_length_divs, shape_step_width_divs, collision_res, collision_res, progress
 		)
 	)
 
@@ -454,7 +449,7 @@ func _generate_flowmap(flowmap_resolution: int) -> void:
 	var last_yield := Time.get_ticks_msec()
 	for i in total:
 		if Time.get_ticks_msec() - last_yield > 16:
-			await _notify_progress(
+			await progress.report_and_wait(
 				RAYCAST_PROGRESS_BASE + (RAYCAST_PROGRESS_END - RAYCAST_PROGRESS_BASE) * float(i) / float(maxi(total, 1)),
 				"Raycasting (%sx%s)" % [res, res]
 			)
@@ -478,7 +473,7 @@ func _generate_flowmap(flowmap_resolution: int) -> void:
 
 		image.set_pixel(px.x, px.y, Color.WHITE)
 
-	await _notify_progress(RAYCAST_PROGRESS_END, "Applying filters (%sx%s)" % [res, res])
+	await progress.report_and_wait(RAYCAST_PROGRESS_END, "Applying filters (%sx%s)" % [res, res])
 
 	# Upscale the half-res collision map back to full resolution before filtering.
 	if collision_res != res:
@@ -547,7 +542,7 @@ func _generate_flowmap(flowmap_resolution: int) -> void:
 	set_materials("i_valid_flowmap", true)
 	set_materials("i_uv2_sides", _uv2_sides)
 	valid_flowmap = true
-	await _notify_progress(100.0, "Finished")
+	await progress.report_and_wait(100.0, "Finished")
 	update_configuration_warnings()
 
 #endregion

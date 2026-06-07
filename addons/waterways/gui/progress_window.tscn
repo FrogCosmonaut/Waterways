@@ -6,17 +6,17 @@
 oversampling_override = 1.0
 title = "Test"
 position = Vector2i(426, 240)
-size = Vector2i(300, 60)
+size = Vector2i(500, 50)
 visible = true
 wrap_controls = false
 borderless = false
-min_size = Vector2i(300, 60)
+min_size = Vector2i(500, 50)
 script = ExtResource("1_xgojc")
 
 [node name="ProgressBar" type="ProgressBar" parent="." unique_id=1023427803]
 unique_name_in_owner = true
 offset_left = 4.0
 offset_top = 4.0
-offset_right = 296.0
-offset_bottom = 56.0
+offset_right = 496.0
+offset_bottom = 46.0
 step = 1.0
