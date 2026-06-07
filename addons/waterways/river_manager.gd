@@ -534,8 +534,12 @@ func _generate_flowmap(flowmap_resolution: int) -> void:
 	remove_child(renderer_instance)
 	renderer_instance.queue_free()
 
-	flow_foam_noise = WaterwaysHelperMethods.save_baked_texture(flow_foam_noise_img, self, "flow_foam")
-	dist_pressure = WaterwaysHelperMethods.save_baked_texture(dist_pressure_img, self, "dist_pressure")
+	var _wc := WaterwaysConstants # wc xD
+	var flow_foam_filename := _wc.BAKED_TEXTURE_SUFFIXES_MAP.get(_wc.BakedTextureSuffix.FLOW_FOAM)
+	var dist_press_filename := _wc.BAKED_TEXTURE_SUFFIXES_MAP.get(_wc.BakedTextureSuffix.DIST_PRESSURE)
+
+	flow_foam_noise = WaterwaysHelperMethods.save_baked_texture(flow_foam_noise_img, self, flow_foam_filename)
+	dist_pressure = WaterwaysHelperMethods.save_baked_texture(dist_pressure_img, self, dist_press_filename)
 
 	set_materials("i_flowmap", flow_foam_noise)
 	set_materials("i_distmap", dist_pressure)

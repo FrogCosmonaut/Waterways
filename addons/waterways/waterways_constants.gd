@@ -29,6 +29,20 @@ enum RenderShader {
 	ALPHA_SHADER,
 }
 
+enum BakedTextureSuffix {
+	FLOW_FOAM,
+	DIST_PRESSURE,
+	SYSTEM_MAP,
+}
+
+const BAKED_TEXTURE_SUFFIXES_MAP: Dictionary[BakedTextureSuffix, String] = {
+	BakedTextureSuffix.FLOW_FOAM: "flow_foam",
+	BakedTextureSuffix.DIST_PRESSURE: "dist_pressure",
+	BakedTextureSuffix.SYSTEM_MAP: "system_map",
+}
+
+const TEXTURES_FOLDER_SUFFIX: String = "_waterways"
+
 const _FILTER_SHADER_DIR: String = "res://addons/waterways/shaders/filters"
 const _FILTER_SHADER_MAP: Dictionary[FilterShader, String] = {
 	FilterShader.DILATE_PASS1: "dilate_filter_pass1.gdshader",

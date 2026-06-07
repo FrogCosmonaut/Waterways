@@ -1,8 +1,9 @@
 [gd_scene format=3 uid="uid://b7sb78as2wbok"]
 
 [ext_resource type="Script" uid="uid://bmlw3o7xlbykv" path="res://addons/waterways/gui/water_system_controls.gd" id="1"]
+[ext_resource type="PackedScene" uid="uid://c1y4c6t6gki6l" path="res://addons/waterways/gui/clean_orphan_button.tscn" id="2_ep8xt"]
 
-[sub_resource type="DPITexture" id="DPITexture_vdbfi"]
+[sub_resource type="DPITexture" id="DPITexture_ep8xt"]
 _source = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\"><path fill=\"#e0e0e0\" d=\"M14 2.199v2.615l-2.625 1.313V3.512zM2 6.264l2.625 1.312v2.551L2 8.814zm12 0v2.55l-2.625 1.313V7.576zM6 7.719h4v2.64H6zm-4 2.56 2.625 1.313v2.521L2 12.801zm12 0v2.522l-2.625 1.312v-2.521zm-8 1.455h4v2.641H6zm4-8.109v2.734H5.844s-.749.647-.875.641c-.131-.007-1.51-1.456-1.51-1.456L2 4.814V2.199l.117.06s-.064-.775.424-1.216L1.279.441A.626.626 0 0 0 .375 1v12c0 .237.134.453.346.559l4 2a.626.626 0 0 0 .279.066h6a.626.626 0 0 0 .279-.066l4-2a.625.625 0 0 0 .346-.559V1a.625.625 0 0 0-.904-.559l-3.869 1.934H7.888s.084.624-.218 1.25z\"/><path fill=\"#fff\" fill-opacity=\".686\" d=\"M5 6.25c-4-3.5-2-6 0-6s4 2.5 0 6z\"/></svg>
 "
 base_scale = 1.1
@@ -13,7 +14,7 @@ Color(0.37254903, 1, 0.5921569, 1): Color(0.45, 0.95, 0.5, 1),
 Color(1, 0.8666667, 0.39607844, 1): Color(0.83, 0.78, 0.62, 1)
 }
 
-[sub_resource type="DPITexture" id="DPITexture_ep8xt"]
+[sub_resource type="DPITexture" id="DPITexture_vksp3"]
 _source = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\"><path fill=\"#e0e0e0\" d=\"m2 1v2h12v-2zm-1 3v9a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-9zm2 1h1v1h-1zm3 0h1v1h-1zm3 0h1v1h-1zm3 0h1v1h-1zm-9 2h10v6h-10zm3 1v1h4v-1z\"/></svg>
 "
 base_scale = 1.1
@@ -24,8 +25,19 @@ Color(0.37254903, 1, 0.5921569, 1): Color(0.45, 0.95, 0.5, 1),
 Color(1, 0.8666667, 0.39607844, 1): Color(0.83, 0.78, 0.62, 1)
 }
 
+[sub_resource type="DPITexture" id="DPITexture_v415u"]
+_source = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\"><path fill=\"#e0e0e0\" d=\"m8 1a1 1 0 0 0 -1 1v5h-2c-1.108 0-2 .892-2 2v1h10v-1c0-1.108-.892-2-2-2h-2v-5a1 1 0 0 0 -1-1zm-5 10v4l10-1v-3z\"/></svg>
+"
+base_scale = 1.1
+saturation = 2.0
+color_map = {
+Color(1, 0.37254903, 0.37254903, 1): Color(1, 0.47, 0.42, 1),
+Color(0.37254903, 1, 0.5921569, 1): Color(0.45, 0.95, 0.5, 1),
+Color(1, 0.8666667, 0.39607844, 1): Color(0.83, 0.78, 0.62, 1)
+}
+
 [node name="WaterSystemControls" type="HBoxContainer" unique_id=1284102819]
-offset_right = 128.0
+offset_right = 102.0
 offset_bottom = 26.0
 script = ExtResource("1")
 
@@ -33,7 +45,7 @@ script = ExtResource("1")
 unique_name_in_owner = true
 layout_mode = 2
 tooltip_text = "Generate system maps."
-icon = SubResource("DPITexture_vdbfi")
+icon = SubResource("DPITexture_ep8xt")
 flat = true
 
 [node name="VSeparator" type="VSeparator" parent="." unique_id=1775896808]
@@ -43,8 +55,15 @@ layout_mode = 2
 unique_name_in_owner = true
 layout_mode = 2
 tooltip_text = "Bake all the river childrens of this node."
-icon = SubResource("DPITexture_ep8xt")
+icon = SubResource("DPITexture_vksp3")
 flat = true
+
+[node name="VSeparator6" type="VSeparator" parent="." unique_id=1729831358]
+layout_mode = 2
+
+[node name="CleanOrphanButton" parent="." unique_id=1440419214 instance=ExtResource("2_ep8xt")]
+layout_mode = 2
+icon = SubResource("DPITexture_v415u")
 
 [connection signal="pressed" from="GenerateSystemMapButton" to="." method="_on_generate_system_map_button_pressed"]
 [connection signal="pressed" from="BakeRiversButton" to="." method="_on_bake_rivers_button_pressed"]

@@ -142,8 +142,11 @@ func generate_system_maps() -> void:
 	var filter_renderer: WaterwaysFilterRenderer = FILTER_RENDERER_SCENE.instantiate()
 	add_child(filter_renderer)
 
+	var _wc := WaterwaysConstants
+	var system_map_suffix := _wc.BAKED_TEXTURE_SUFFIXES_MAP.get(_wc.BakedTextureSuffix.SYSTEM_MAP)
+
 	system_map = await filter_renderer.apply_combine(flow_map, flow_map, height_map) as ImageTexture
-	system_map = WaterwaysHelperMethods.save_baked_texture(system_map, self, "system_map") as ImageTexture
+	system_map = WaterwaysHelperMethods.save_baked_texture(system_map, self, system_map_suffix) as ImageTexture
 
 	remove_child(filter_renderer)
 

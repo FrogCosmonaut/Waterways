@@ -3,6 +3,7 @@
 class_name WaterwaysHelperMethods
 extends RefCounted
 
+
 static func cart2bary(p : Vector3, a : Vector3, b : Vector3, c: Vector3) -> Vector3:
 	var v0 := b - a
 	var v1 := c - a
@@ -249,15 +250,17 @@ static func add_margins(image : Image, resolution : int, margin : int) -> Image:
 	return image_with_margins
 
 
+#region Textures folder methods
+
 ## Saves a baked map next to the current scene as a compressed .res file and
 ## returns a reference, so the texture lives on the disk instead of embedded in the .tscn
-static func save_baked_texture(texture : Texture2D, node : Node, suffix : String) -> Texture2D:
+static func save_baked_texture(texture: Texture2D, node: Node, suffix: String) -> Texture2D:
 	var scene_root := node.get_tree().get_edited_scene_root()
 	if scene_root == null or scene_root.scene_file_path.is_empty():
-		push_warning("Waterways: save the scene before baking so the '%s' map is stored on disk. Embedding it in the scene for now, which bloats the .tscn." % suffix)
+		push_warning("Waterways: save the scene before baking so the '%s' map is stored on disk." % suffix)
 		return texture
 
-	var dir := scene_root.scene_file_path.get_basename() + "_waterways"
+	var dir := scene_root.scene_file_path.get_basename() + WaterwaysConstants.TEXTURES_FOLDER_SUFFIX
 	if not DirAccess.dir_exists_absolute(dir):
 		DirAccess.make_dir_recursive_absolute(dir)
 
@@ -271,3 +274,61 @@ static func save_baked_texture(texture : Texture2D, node : Node, suffix : String
 
 	texture.take_over_path(path)
 	return texture
+
+
+static func _collect_baked_node_ids(scene_root: Node) -> Dictionary:
+	var ids := {}
+	var stack: Array[Node] = [scene_root]
+	while not stack.is_empty():
+		var node: Node = stack.pop_back()
+		if node is WaterwaysRiver or node is WaterwaysSystem:
+			var node_id := node.name if node == scene_root else String(scene_root.get_path_to(node)).replace("/", "_")
+			ids[node_id] = true
+		stack.append_array(node.get_children())
+	return ids
+
+
+static func _node_id_from_baked_filename(file_name: String) -> String:
+	var base := file_name.get_basename()
+	for suffix in WaterwaysConstants.BAKED_TEXTURE_SUFFIXES_MAP.values():
+		if base.ends_with("_" + suffix):
+			return base.substr(0, base.length() - suffix.length() - 1)
+	return ""
+
+
+## Scans the `_waterways` folder and returns the paths of baked `.res` files
+## that dont belong to any WaterwaysRiver or WaterwaysSystem currently in the scene.
+static func find_orphaned_baked_textures(scene_root: Node) -> PackedStringArray:
+	var orphans: PackedStringArray = []
+	if scene_root == null or scene_root.scene_file_path.is_empty():
+		return orphans
+
+	var dir_path := scene_root.scene_file_path.get_basename() + WaterwaysConstants.TEXTURES_FOLDER_SUFFIX
+	var dir := DirAccess.open(dir_path)
+	if dir == null:
+		return orphans
+
+	var known_ids := _collect_baked_node_ids(scene_root)
+
+	dir.list_dir_begin()
+	var file_name := dir.get_next()
+	while file_name != "":
+		if not dir.current_is_dir() and file_name.get_extension() == "res":
+			var node_id := _node_id_from_baked_filename(file_name)
+			if not node_id.is_empty() and not known_ids.has(node_id):
+				orphans.append(dir_path.path_join(file_name))
+		file_name = dir.get_next()
+	dir.list_dir_end()
+
+	return orphans
+
+
+static func delete_baked_textures(paths: PackedStringArray) -> void:
+	for path in paths:
+		var err := DirAccess.remove_absolute(path)
+		if err != OK:
+			push_warning("Waterways: could not delete '%s' (error %d)." % [path, err])
+	if Engine.is_editor_hint() and not paths.is_empty():
+		EditorInterface.get_resource_filesystem().scan()
+
+#endregion
