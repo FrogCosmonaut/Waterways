@@ -6,6 +6,9 @@ extends EditorPlugin
 const RIVER_CONTROLS_SCENE: PackedScene = preload("./gui/river_controls.tscn")
 const WATER_SYSTEM_CONTROLS_SCENE: PackedScene = preload("./gui/water_system_controls.tscn")
 const PROGRESS_WINDOW_SCENE: PackedScene = preload("./gui/progress_window.tscn")
+## Maximum world-space distance at which a dragged river endpoint automatically
+## joins an endpoint of another river when dropped.
+const ENDPOINT_JOIN_DISTANCE := 0.5
 
 var river_gizmo := _WaterwaysRiverGizmo.new()
 var waterfall_gizmo := _WaterwaysWaterfallGizmo.new()
@@ -320,6 +323,75 @@ func _forward_3d_gui_input_river(camera: Camera3D, event: InputEvent) -> int:
 		# TODO - so this was returning a bool before? Check this
 		return _river_controls.spatial_gui_input(event)
 	return AFTER_GUI_INPUT_PASS
+
+
+## Called by the river gizmo when the user finishes dragging a curve point.
+func try_join_dragged_endpoint(river: WaterwaysRiver, point_index: int, restore_position: Vector3) -> bool:
+	var point_count: int = river.curve.get_point_count()
+	if point_index != 0 and point_index != point_count - 1:
+		return false
+
+	var dropped_position: Vector3 = river.to_global(river.curve.get_point_position(point_index))
+	var picked := _find_nearby_river_endpoint(_get_other_rivers(river), dropped_position)
+	if picked.is_empty():
+		return false
+
+	_join_river_endpoint(river, point_index, restore_position, picked.river, picked.point)
+	return true
+
+
+func _find_nearby_river_endpoint(rivers: Array, global_position: Vector3) -> Dictionary:
+	var closest_dist := ENDPOINT_JOIN_DISTANCE
+	var result := {}
+	for river in rivers:
+		var point_count: int = river.curve.get_point_count()
+		for point in [0, point_count - 1]:
+			var pos: Vector3 = river.to_global(river.curve.get_point_position(point))
+			var dist := pos.distance_to(global_position)
+			if dist < closest_dist:
+				closest_dist = dist
+				result = {river = river, point = point}
+	return result
+
+
+func _get_other_rivers(exclude: WaterwaysRiver) -> Array:
+	var rivers: Array = []
+	var scene_root := get_tree().get_edited_scene_root()
+	if scene_root == null:
+		return rivers
+	var stack: Array[Node] = [scene_root]
+	while not stack.is_empty():
+		var node: Node = stack.pop_back()
+		if node is WaterwaysRiver and node != exclude:
+			rivers.append(node)
+		stack.append_array(node.get_children())
+	return rivers
+
+
+func _join_river_endpoint(source_river: WaterwaysRiver, source_point: int, restore_position: Vector3, target_river: WaterwaysRiver, target_point: int) -> void:
+	var old_in := source_river.curve.get_point_in(source_point)
+	var old_out := source_river.curve.get_point_out(source_point)
+	var old_widths := source_river.widths.duplicate()
+
+	var ur := get_undo_redo()
+	ur.create_action("Join River Endpoint")
+	ur.add_do_method(source_river, "snap_endpoint_to", source_point, target_river, target_point)
+	ur.add_do_method(source_river, "properties_changed")
+	ur.add_do_method(source_river, "set_materials", "i_valid_flowmap", false)
+	ur.add_do_property(source_river, "valid_flowmap", false)
+	ur.add_do_method(source_river, "update_configuration_warnings")
+
+	ur.add_undo_method(source_river, "set_curve_point_position", source_point, restore_position)
+	ur.add_undo_method(source_river, "set_curve_point_in", source_point, old_in)
+	ur.add_undo_method(source_river, "set_curve_point_out", source_point, old_out)
+	ur.add_undo_method(source_river, "set_widths", old_widths)
+	ur.add_undo_method(source_river, "properties_changed")
+	ur.add_undo_method(source_river, "set_materials", "i_valid_flowmap", source_river.valid_flowmap)
+	ur.add_undo_property(source_river, "valid_flowmap", source_river.valid_flowmap)
+	ur.add_undo_method(source_river, "update_configuration_warnings")
+	ur.commit_action()
+
+	target_river.regenerate()
 
 
 func _progress_notified(progress: float, message: String) -> void:

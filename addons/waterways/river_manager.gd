@@ -304,6 +304,13 @@ func set_widths(new_widths: Array[float]) -> void:
 	_generate_river()
 
 
+## Rebuilds the river mesh from the current curve and widths without changing data.
+func regenerate() -> void:
+	if _first_enter_tree:
+		return
+	_generate_river()
+
+
 func set_materials(param: String, value) -> void:
 	_material.set_shader_parameter(param, value)
 	_debug_material.set_shader_parameter(param, value)
@@ -334,6 +341,29 @@ func get_curve_points() -> PackedVector3Array:
 	for p in curve.get_point_count():
 		points.append(curve.get_point_position(p))
 	return points
+
+
+func snap_endpoint_to(point_index: int, target_river: WaterwaysRiver, target_point_index: int) -> void:
+	var target_position: Vector3 = target_river.curve.get_point_position(target_point_index)
+	set_curve_point_position(point_index, to_local(target_river.to_global(target_position)))
+
+	var target_direction := _WaterwaysHelperMethods.get_endpoint_flow_direction(target_river.curve, target_point_index)
+	var basis_to_local: Basis = global_transform.basis.inverse() * target_river.global_transform.basis
+	var direction_local := (basis_to_local * target_direction).normalized()
+	if point_index == 0:
+		var out_handle := curve.get_point_out(point_index)
+		set_curve_point_out(point_index, direction_local * out_handle.length())
+	else:
+		var in_handle := curve.get_point_in(point_index)
+		set_curve_point_in(point_index, -direction_local * in_handle.length())
+
+	var target_right := target_direction.cross(Vector3.UP).normalized()
+	var target_width_vector := target_right * target_river.widths[target_point_index]
+	var new_width: float = (basis_to_local * target_width_vector).length()
+
+	var new_widths := widths.duplicate()
+	new_widths[point_index] = new_width
+	set_widths(new_widths)
 
 
 func get_closest_point_to(point: Vector3) -> int:
@@ -412,6 +442,8 @@ func _generate_river() -> void:
 	_steps = int( max(1.0, round(curve.get_baked_length() / average_width)) )
 	
 	var river_width_values := _WaterwaysHelperMethods.generate_river_width_values(curve, _steps, shape_step_length_divs, shape_step_width_divs, widths)
+	river_width_values[0] = widths[0]
+	river_width_values[river_width_values.size() - 1] = widths[widths.size() - 1]
 	mesh_instance.mesh = _WaterwaysHelperMethods.generate_river_mesh(curve, _steps, shape_step_length_divs, shape_step_width_divs, shape_smoothness, river_width_values)
 	mesh_instance.mesh.surface_set_material(0, _material)
 

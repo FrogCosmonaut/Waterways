@@ -42,6 +42,12 @@ static func calculate_side(steps: int) -> int:
 	return int(side_float)
 
 
+static func get_endpoint_flow_direction(curve: Curve3D, point_index: int) -> Vector3:
+	if point_index == 0:
+		return curve.get_point_out(point_index).normalized()
+	return (-curve.get_point_in(point_index)).normalized()
+
+
 static func generate_river_width_values(curve: Curve3D, steps: int, step_length_divs: int, step_width_divs: int, widths: Array[float]) -> Array[float]:
 	var river_width_values: Array[float]
 	var length := curve.get_baked_length()
@@ -68,16 +74,23 @@ static func generate_river_mesh(curve: Curve3D, steps: int, step_length_divs: in
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var curve_length := curve.get_baked_length()
+	var last_step := steps * step_length_divs
 	st.set_smooth_group(0)
-	
+
 	# Generating the verts
-	for step in steps * step_length_divs + 1:
-		var position := curve.sample_baked(float(step) / float(steps * step_length_divs) * curve_length, false)
-		var backward_pos := curve.sample_baked((float(step) - smoothness) / float(steps * step_length_divs) * curve_length, false)
-		var forward_pos := curve.sample_baked((float(step) + smoothness) / float(steps * step_length_divs) * curve_length, false)
-		var forward_vector := forward_pos - backward_pos
+	for step in last_step + 1:
+		var position := curve.sample_baked(float(step) / float(last_step) * curve_length, false)
+		var forward_vector: Vector3
+		if step == 0:
+			forward_vector = curve.get_point_out(0)
+		elif step == last_step:
+			forward_vector = -curve.get_point_in(curve.get_point_count() - 1)
+		if forward_vector.is_zero_approx():
+			var backward_pos := curve.sample_baked((float(step) - smoothness) / float(last_step) * curve_length, false)
+			var forward_pos := curve.sample_baked((float(step) + smoothness) / float(last_step) * curve_length, false)
+			forward_vector = forward_pos - backward_pos
 		var right_vector := forward_vector.cross(Vector3.UP).normalized()
-		
+
 		var width_lerp: float = river_width_values[step]
 		
 		for w_sub in step_width_divs + 1:
