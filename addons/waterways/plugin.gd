@@ -331,8 +331,9 @@ func try_join_dragged_endpoint(river: WaterwaysRiver, point_index: int, restore_
 	if point_index != 0 and point_index != point_count - 1:
 		return false
 
+	var source_is_start := point_index == 0
 	var dropped_position: Vector3 = river.to_global(river.curve.get_point_position(point_index))
-	var picked := _find_nearby_river_endpoint(_get_other_rivers(river), dropped_position)
+	var picked := _find_nearby_river_endpoint(_get_other_rivers(river), dropped_position, source_is_start)
 	if picked.is_empty():
 		return false
 
@@ -340,17 +341,17 @@ func try_join_dragged_endpoint(river: WaterwaysRiver, point_index: int, restore_
 	return true
 
 
-func _find_nearby_river_endpoint(rivers: Array, global_position: Vector3) -> Dictionary:
+func _find_nearby_river_endpoint(rivers: Array, global_position: Vector3, source_is_start: bool) -> Dictionary:
 	var closest_dist := ENDPOINT_JOIN_DISTANCE
 	var result := {}
 	for river in rivers:
 		var point_count: int = river.curve.get_point_count()
-		for point in [0, point_count - 1]:
-			var pos: Vector3 = river.to_global(river.curve.get_point_position(point))
-			var dist := pos.distance_to(global_position)
-			if dist < closest_dist:
-				closest_dist = dist
-				result = {river = river, point = point}
+		var target_point: int = (point_count - 1) if source_is_start else 0
+		var pos: Vector3 = river.to_global(river.curve.get_point_position(target_point))
+		var dist := pos.distance_to(global_position)
+		if dist < closest_dist:
+			closest_dist = dist
+			result = {river = river, point = target_point}
 	return result
 
 

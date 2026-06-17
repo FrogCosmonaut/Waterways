@@ -350,12 +350,10 @@ func snap_endpoint_to(point_index: int, target_river: WaterwaysRiver, target_poi
 	var target_direction := _WaterwaysHelperMethods.get_endpoint_flow_direction(target_river.curve, target_point_index)
 	var basis_to_local: Basis = global_transform.basis.inverse() * target_river.global_transform.basis
 	var direction_local := (basis_to_local * target_direction).normalized()
-	if point_index == 0:
-		var out_handle := curve.get_point_out(point_index)
-		set_curve_point_out(point_index, direction_local * out_handle.length())
-	else:
-		var in_handle := curve.get_point_in(point_index)
-		set_curve_point_in(point_index, -direction_local * in_handle.length())
+	var target_handle: Vector3 = target_river.curve.get_point_out(target_point_index) if target_point_index == 0 else target_river.curve.get_point_in(target_point_index)
+	var handle_length := (basis_to_local * target_handle).length()
+	set_curve_point_out(point_index, direction_local * handle_length)
+	set_curve_point_in(point_index, -direction_local * handle_length)
 
 	var target_right := target_direction.cross(Vector3.UP).normalized()
 	var target_width_vector := target_right * target_river.widths[target_point_index]
