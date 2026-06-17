@@ -89,6 +89,8 @@ var progress := _WaterwaysProgressReporter.new(self)
 # Serialised private variables
 @export_storage var _material: ShaderMaterial
 @export_storage var _uv2_sides: int
+# Offset added to the mesh UV.y on a join to match its neighbour's at the shared edge.
+@export_storage var _uv_length_offset: float = 0.0
 
 
 # Internal Methods
@@ -311,6 +313,13 @@ func regenerate() -> void:
 	_generate_river()
 
 
+func set_uv_length_offset(value: float) -> void:
+	_uv_length_offset = value
+	if _first_enter_tree:
+		return
+	_generate_river()
+
+
 func set_materials(param: String, value) -> void:
 	_material.set_shader_parameter(param, value)
 	_debug_material.set_shader_parameter(param, value)
@@ -362,6 +371,11 @@ func snap_endpoint_to(point_index: int, target_river: WaterwaysRiver, target_poi
 	var new_widths := widths.duplicate()
 	new_widths[point_index] = new_width
 	set_widths(new_widths)
+
+	var self_uv_y: float = 0.0 if point_index == 0 else float(_steps)
+	var target_uv_y: float = target_river._uv_length_offset + (0.0 if target_point_index == 0 else float(target_river._steps))
+	_uv_length_offset = target_uv_y - self_uv_y
+	_generate_river()
 
 
 func get_closest_point_to(point: Vector3) -> int:
@@ -442,8 +456,32 @@ func _generate_river() -> void:
 	var river_width_values := _WaterwaysHelperMethods.generate_river_width_values(curve, _steps, shape_step_length_divs, shape_step_width_divs, widths)
 	river_width_values[0] = widths[0]
 	river_width_values[river_width_values.size() - 1] = widths[widths.size() - 1]
-	mesh_instance.mesh = _WaterwaysHelperMethods.generate_river_mesh(curve, _steps, shape_step_length_divs, shape_step_width_divs, shape_smoothness, river_width_values)
+	mesh_instance.mesh = _WaterwaysHelperMethods.generate_river_mesh(curve, _steps, shape_step_length_divs, shape_step_width_divs, shape_smoothness, river_width_values, _uv_length_offset)
 	mesh_instance.mesh.surface_set_material(0, _material)
+
+
+func get_bake_steps() -> int:
+	var average_width := _WaterwaysHelperMethods.sum_array(widths) / (float(widths.size()) / 2.0)
+	return int(max(1.0, round(curve.get_baked_length() / average_width)))
+
+
+func _find_joined_neighbor(at_start: bool) -> Dictionary:
+	var my_point := 0 if at_start else curve.get_point_count() - 1
+	var my_pos := to_global(curve.get_point_position(my_point))
+	var scene_root := get_tree().get_edited_scene_root()
+	if scene_root == null:
+		return {}
+	var stack: Array[Node] = [scene_root]
+	while not stack.is_empty():
+		var node: Node = stack.pop_back()
+		if node is WaterwaysRiver and node != self:
+			var r := node as WaterwaysRiver
+			for n_point in [0, r.curve.get_point_count() - 1]:
+				var n_pos := r.to_global(r.curve.get_point_position(n_point))
+				if n_pos.distance_to(my_pos) < 0.05:
+					return {river = r, at_start = (n_point == 0)}
+		stack.append_array(node.get_children())
+	return {}
 
 
 func _generate_flowmap(flowmap_resolution: int) -> void:
@@ -568,6 +606,32 @@ func _generate_flowmap(flowmap_resolution: int) -> void:
 	# cleanup
 	remove_child(renderer_instance)
 	renderer_instance.queue_free()
+
+	# Confluence edge matching: this copy the neighbour baked edge values along the seam
+	# so flow/foam/phase/dist are seamless.
+	var ff_img: Image = flow_foam_noise_img.get_image()
+	var dp_img: Image = dist_pressure_img.get_image()
+	var matched_edge := false
+	for join_at_start in [true, false]:
+		var neighbor := _find_joined_neighbor(join_at_start)
+		if neighbor.is_empty():
+			continue
+		var n: WaterwaysRiver = neighbor.river
+		if not n.valid_flowmap or n.flow_foam_noise == null or n.dist_pressure == null:
+			continue
+		var n_res := int(n.baking_resolution)
+		var n_steps: int = n.get_bake_steps()
+		var n_at_start: bool = neighbor.at_start
+		_WaterwaysHelperMethods.copy_joined_edge(
+			ff_img, flowmap_resolution, _uv2_sides, _steps, join_at_start,
+			n.flow_foam_noise.get_image(), n_res, n._uv2_sides, n_steps, n_at_start)
+		_WaterwaysHelperMethods.copy_joined_edge(
+			dp_img, flowmap_resolution, _uv2_sides, _steps, join_at_start,
+			n.dist_pressure.get_image(), n_res, n._uv2_sides, n_steps, n_at_start)
+		matched_edge = true
+	if matched_edge:
+		flow_foam_noise_img = ImageTexture.create_from_image(ff_img)
+		dist_pressure_img = ImageTexture.create_from_image(dp_img)
 
 	var _wc := _WaterwaysConstants # wc xD
 	var flow_foam_filename := _wc.BAKED_TEXTURE_SUFFIXES_MAP.get(_wc.BakedTextureSuffix.FLOW_FOAM)

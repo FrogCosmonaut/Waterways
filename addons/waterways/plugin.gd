@@ -373,6 +373,7 @@ func _join_river_endpoint(source_river: WaterwaysRiver, source_point: int, resto
 	var old_in := source_river.curve.get_point_in(source_point)
 	var old_out := source_river.curve.get_point_out(source_point)
 	var old_widths := source_river.widths.duplicate()
+	var old_uv_offset: float = source_river._uv_length_offset
 
 	var ur := get_undo_redo()
 	ur.create_action("Join River Endpoint")
@@ -386,6 +387,7 @@ func _join_river_endpoint(source_river: WaterwaysRiver, source_point: int, resto
 	ur.add_undo_method(source_river, "set_curve_point_in", source_point, old_in)
 	ur.add_undo_method(source_river, "set_curve_point_out", source_point, old_out)
 	ur.add_undo_method(source_river, "set_widths", old_widths)
+	ur.add_undo_method(source_river, "set_uv_length_offset", old_uv_offset)
 	ur.add_undo_method(source_river, "properties_changed")
 	ur.add_undo_method(source_river, "set_materials", "i_valid_flowmap", source_river.valid_flowmap)
 	ur.add_undo_property(source_river, "valid_flowmap", source_river.valid_flowmap)
