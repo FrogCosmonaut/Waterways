@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="WaterwaysRiverShader" format=3 uid="uid://cmyq0hcbaugye"]
+[gd_resource type="Resource" script_class="WaterwaysRiverData" format=3 uid="uid://cmyq0hcbaugye"]
 
 [ext_resource type="Script" uid="uid://ckj6uf7ifo12o" path="res://addons/waterways/resources/waterways_river_shader.gd" id="1_aw3y4"]
 [ext_resource type="Shader" uid="uid://bia1gq1ol56lr" path="res://addons/waterways/shaders/swamp.gdshader" id="2_aw3y4"]

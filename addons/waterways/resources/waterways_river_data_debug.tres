@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="WaterwaysRiverShader" format=3 uid="uid://bcc71wilcan34"]
+[gd_resource type="Resource" script_class="WaterwaysRiverData" format=3 uid="uid://bcc71wilcan34"]
 
 [ext_resource type="Texture2D" uid="uid://dwi2k45x8qyrv" path="res://addons/waterways/textures/debug_pattern.png" id="1_askrl"]
 [ext_resource type="Script" uid="uid://ckj6uf7ifo12o" path="res://addons/waterways/resources/waterways_river_shader.gd" id="2_askrl"]

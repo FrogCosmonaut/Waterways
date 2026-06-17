@@ -1,5 +1,5 @@
-@icon("../icons/waterways_shader.svg")
-class_name WaterwaysRiverShader
+@icon("../icons/waterways_data.svg")
+class_name WaterwaysRiverData
 extends Resource
 
 @export var name: String

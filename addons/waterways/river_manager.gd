@@ -20,10 +20,10 @@ const SHADER_CATEGORIES = {
 	custom_ = "Custom"
 }
 
-const DEFAULT_WATER_SHADER: WaterwaysRiverShader = preload("./resources/waterways_river_shader_water.tres")
-const DEBUG_SHADER: WaterwaysRiverShader = preload("./resources/waterways_river_shader_debug.tres")
+const DEFAULT_RIVER_DATA: WaterwaysRiverData = preload("./resources/waterways_river_data_water.tres")
+const DEBUG_RIVER_DATA: WaterwaysRiverData = preload("./resources/waterways_river_data_debug.tres")
 
-@export var waterways_shader: WaterwaysRiverShader = DEFAULT_WATER_SHADER: set = set_shader
+@export var river_data: WaterwaysRiverData = DEFAULT_RIVER_DATA: set = set_river_data
 
 # Shape Properties
 @export_group("Shape")
@@ -183,13 +183,13 @@ func _init() -> void:
 	_filter_renderer = load(FILTER_RENDERER_PATH)
 
 	_debug_material = ShaderMaterial.new()
-	_debug_material.shader = DEBUG_SHADER.shader
-	for texture in DEBUG_SHADER.texture_map:
-		var image: Texture2D = DEBUG_SHADER.texture_map[texture]
+	_debug_material.shader = DEBUG_RIVER_DATA.shader
+	for texture in DEBUG_RIVER_DATA.texture_map:
+		var image: Texture2D = DEBUG_RIVER_DATA.texture_map[texture]
 		_debug_material.set_shader_parameter(texture, image)
 
 	_material = ShaderMaterial.new()
-	_apply_waterways_shader(DEFAULT_WATER_SHADER)
+	_apply_river_data(DEFAULT_RIVER_DATA)
 	# Have to manually set the color or it does not default right. Not sure how to work around this
 	_material.set_shader_parameter("albedo_color", Transform3D(Vector3(0.0, 0.8, 1.0), Vector3(0.15, 0.2, 0.5), Vector3.ZERO, Vector3.ZERO))
 
@@ -238,10 +238,10 @@ func _get_configuration_warnings() -> PackedStringArray:
 	return ["No flowmap is set. Select River -> Generate Flow & Foam Map to generate and assign one."]
 
 
-func _apply_waterways_shader(river_shader: WaterwaysRiverShader) -> void:
-	_material.shader = river_shader.shader
-	for texture in river_shader.texture_map:
-		var image: Texture2D = river_shader.texture_map[texture]
+func _apply_river_data(data: WaterwaysRiverData) -> void:
+	_material.shader = data.shader
+	for texture in data.texture_map:
+		var image: Texture2D = data.texture_map[texture]
 		_material.set_shader_parameter(texture, image)
 
 
@@ -377,7 +377,7 @@ func get_closest_point_to(point: Vector3) -> int:
 	return closest_index
 
 
-## Reset all the shader parameters that were modified when a new WaterwaysRiverShader is selected.
+## Reset all the shader parameters that were modified when a new WaterwaysRiverData is selected.
 func _reset_shader_parameters() -> void:
 	if _material.shader == null:
 		return
@@ -385,7 +385,7 @@ func _reset_shader_parameters() -> void:
 	for p in RenderingServer.get_shader_parameter_list(shader_rid):
 		if p.name.begins_with("i_"):
 			continue
-		if waterways_shader.texture_map.has(p.name):
+		if river_data.texture_map.has(p.name):
 			continue
 		_material.set_shader_parameter(
 			p.name, RenderingServer.shader_get_parameter_default(shader_rid, p.name)
@@ -421,11 +421,11 @@ func set_smoothness(value: float) -> void:
 	_invalidate_and_regen()
 
 
-func set_shader(value: WaterwaysRiverShader) -> void:
-	if waterways_shader == value:
+func set_river_data(value: WaterwaysRiverData) -> void:
+	if river_data == value:
 		return
-	waterways_shader = value
-	_apply_waterways_shader(waterways_shader)
+	river_data = value
+	_apply_river_data(river_data)
 	_reset_shader_parameters()
 	notify_property_list_changed()
 
