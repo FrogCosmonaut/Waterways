@@ -309,7 +309,7 @@ func _set_handle(gizmo: EditorNode3DGizmo, index: int, secondary: bool, camera: 
 		river.widths[p_index] = max(river.widths[p_index], MIN_DIST_TO_CENTER_HANDLE)
 		# ensures that setter get's called so river regenerates - TODO probably find a nicer way of doing this
 		river.widths = river.widths
-	_redraw(gizmo)
+	river.update_gizmos()
 
 
 # Handle Undo / Redo of handle movements
@@ -317,11 +317,16 @@ func _set_handle(gizmo: EditorNode3DGizmo, index: int, secondary: bool, camera: 
 func _commit_handle(gizmo: EditorNode3DGizmo, index: int, secondary: bool, restore, cancel: bool = false) -> void:
 	var river: WaterwaysRiver = gizmo.get_node_3d()
 	var point_count = river.curve.get_point_count()
+	var p_index = _get_curve_index(index, point_count)
+	if not cancel and _is_center_point(index, point_count) \
+			and (p_index == 0 or p_index == point_count - 1) \
+			and editor_plugin.try_join_dragged_endpoint(river, p_index, restore):
+		river.update_gizmos()
+		return
 
 	var ur = editor_plugin.get_undo_redo()
 	ur.create_action("Change River Shape")
 
-	var p_index = _get_curve_index(index, point_count)
 	if _is_center_point(index, point_count):
 		ur.add_do_method(river, "set_curve_point_position", p_index, river.curve.get_point_position(p_index))
 		ur.add_undo_method(river, "set_curve_point_position", p_index, restore)
@@ -351,7 +356,7 @@ func _commit_handle(gizmo: EditorNode3DGizmo, index: int, secondary: bool, resto
 	ur.add_undo_method(river, "update_configuration_warnings")
 	ur.commit_action()
 
-	_redraw(gizmo)
+	river.update_gizmos()
 
 
 func _redraw(gizmo: EditorNode3DGizmo) -> void:
