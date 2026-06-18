@@ -71,6 +71,9 @@ const FOAM_NOISE_PATH: String = "res://addons/waterways/textures/foam_noise.png"
 const DEFAULT_SYSTEM_GROUP_NAME: StringName = &"waterways_system"
 const RIVER_MESH_NAME: StringName = &"RiverMeshInstance"
 const WATERFALL_MESH_NAME: StringName = &"WaterfallMeshInstance"
+## Maximum world-space distance at which a dragged river endpoint automatically
+## joins an endpoint of another river when dropped.
+const ENDPOINT_JOIN_DISTANCE := 0.5
 
 
 ## Cached filepath: Shader

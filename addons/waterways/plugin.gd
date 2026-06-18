@@ -6,9 +6,6 @@ extends EditorPlugin
 const RIVER_CONTROLS_SCENE: PackedScene = preload("./gui/river_controls.tscn")
 const WATER_SYSTEM_CONTROLS_SCENE: PackedScene = preload("./gui/water_system_controls.tscn")
 const PROGRESS_WINDOW_SCENE: PackedScene = preload("./gui/progress_window.tscn")
-## Maximum world-space distance at which a dragged river endpoint automatically
-## joins an endpoint of another river when dropped.
-const ENDPOINT_JOIN_DISTANCE := 0.5
 
 var river_gizmo := _WaterwaysRiverGizmo.new()
 var waterfall_gizmo := _WaterwaysWaterfallGizmo.new()
@@ -342,7 +339,7 @@ func try_join_dragged_endpoint(river: WaterwaysRiver, point_index: int, restore_
 
 
 func _find_nearby_river_endpoint(rivers: Array, global_position: Vector3, source_is_start: bool) -> Dictionary:
-	var closest_dist := ENDPOINT_JOIN_DISTANCE
+	var closest_dist := _WaterwaysConstants.ENDPOINT_JOIN_DISTANCE
 	var result := {}
 	for river in rivers:
 		var point_count: int = river.curve.get_point_count()

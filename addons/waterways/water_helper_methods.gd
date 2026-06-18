@@ -103,7 +103,7 @@ static func generate_river_mesh(
 			normal_end = right_vector.cross(forward_vector).normalized()
 
 		var width_lerp: float = river_width_values[step]
-		
+
 		for w_sub in step_width_divs + 1:
 			st.set_uv(
 				Vector2(
