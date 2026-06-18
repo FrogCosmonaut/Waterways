@@ -330,12 +330,20 @@ func try_join_dragged_endpoint(river: WaterwaysRiver, point_index: int, restore_
 
 	var source_is_start := point_index == 0
 	var dropped_position: Vector3 = river.to_global(river.curve.get_point_position(point_index))
-	var picked := _find_nearby_river_endpoint(_get_other_rivers(river), dropped_position, source_is_start)
-	if picked.is_empty():
-		return false
+	var others := _get_other_rivers(river)
 
-	_join_river_endpoint(river, point_index, restore_position, picked.river, picked.point)
-	return true
+	# Endpoint join takes priority; a side merge is the fallback.
+	var picked := _find_nearby_river_endpoint(others, dropped_position, source_is_start)
+	if not picked.is_empty():
+		_join_river_endpoint(river, point_index, restore_position, picked.river, picked.point)
+		return true
+
+	var side := _find_nearby_river_side(others, dropped_position)
+	if not side.is_empty():
+		_join_river_side(river, point_index, restore_position, side.river, side.offset)
+		return true
+
+	return false
 
 
 func _find_nearby_river_endpoint(rivers: Array, global_position: Vector3, source_is_start: bool) -> Dictionary:
@@ -349,6 +357,29 @@ func _find_nearby_river_endpoint(rivers: Array, global_position: Vector3, source
 		if dist < closest_dist:
 			closest_dist = dist
 			result = {river = river, point = target_point}
+	return result
+
+
+func _find_nearby_river_side(rivers: Array, global_position: Vector3) -> Dictionary:
+	var best_overshoot := _WaterwaysConstants.SIDE_JOIN_DISTANCE
+	var result := {}
+	for river in rivers:
+		if river.curve == null or river.curve.get_point_count() < 2 or river.widths.is_empty():
+			continue
+		var length: float = river.curve.get_baked_length()
+		var local: Vector3 = river.to_local(global_position)
+		var offset: float = river.curve.get_closest_offset(local)
+		var start_margin: float = river.widths[0]
+		var end_margin: float = river.widths[river.widths.size() - 1]
+		if offset <= start_margin or offset >= length - end_margin:
+			continue
+		var center: Vector3 = river.curve.sample_baked(offset)
+		var width: float = _WaterwaysHelperMethods.width_at_offset(river.curve, river.widths, offset)
+		# How far past the bank the drop is (0 = on the surface).
+		var overshoot := maxf(local.distance_to(center) - width, 0.0)
+		if overshoot < best_overshoot:
+			best_overshoot = overshoot
+			result = {river = river, offset = offset}
 	return result
 
 
@@ -392,6 +423,33 @@ func _join_river_endpoint(source_river: WaterwaysRiver, source_point: int, resto
 	ur.commit_action()
 
 	target_river.regenerate()
+
+
+## Side merge (T/Y confluence)
+func _join_river_side(source_river: WaterwaysRiver, source_point: int, restore_position: Vector3, main_river: WaterwaysRiver, offset: float) -> void:
+	var old_in := source_river.curve.get_point_in(source_point)
+	var old_out := source_river.curve.get_point_out(source_point)
+	var old_widths := source_river.widths.duplicate()
+	var old_uv_offset: float = source_river._uv_length_offset
+
+	var ur := get_undo_redo()
+	ur.create_action("Join River Side")
+	ur.add_do_method(source_river, "snap_endpoint_to_river_side", source_point, main_river, offset)
+	ur.add_do_method(source_river, "properties_changed")
+	ur.add_do_method(source_river, "set_materials", "i_valid_flowmap", false)
+	ur.add_do_property(source_river, "valid_flowmap", false)
+	ur.add_do_method(source_river, "update_configuration_warnings")
+
+	ur.add_undo_method(source_river, "set_curve_point_position", source_point, restore_position)
+	ur.add_undo_method(source_river, "set_curve_point_in", source_point, old_in)
+	ur.add_undo_method(source_river, "set_curve_point_out", source_point, old_out)
+	ur.add_undo_method(source_river, "set_widths", old_widths)
+	ur.add_undo_method(source_river, "set_uv_length_offset", old_uv_offset)
+	ur.add_undo_method(source_river, "properties_changed")
+	ur.add_undo_method(source_river, "set_materials", "i_valid_flowmap", source_river.valid_flowmap)
+	ur.add_undo_property(source_river, "valid_flowmap", source_river.valid_flowmap)
+	ur.add_undo_method(source_river, "update_configuration_warnings")
+	ur.commit_action()
 
 
 func _progress_notified(progress: float, message: String) -> void:

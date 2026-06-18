@@ -378,6 +378,26 @@ func snap_endpoint_to(point_index: int, target_river: WaterwaysRiver, target_poi
 	_generate_river()
 
 
+## Snaps this river's endpoint onto the curve (centerline) of [param main_river]
+func snap_endpoint_to_river_side(point_index: int, main_river: WaterwaysRiver, main_offset: float) -> void:
+	var center_world := main_river.to_global(main_river.curve.sample_baked(main_offset))
+	set_curve_point_position(point_index, to_local(center_world))
+
+	var approach_dir := _WaterwaysHelperMethods.get_endpoint_flow_direction(curve, point_index)
+	var existing_handle: Vector3 = curve.get_point_out(point_index) if point_index == 0 else curve.get_point_in(point_index)
+	var handle_length := existing_handle.length()
+	if handle_length < 0.01:
+		handle_length = 0.25
+
+	var neighbor_index: int = point_index + 1 if point_index == 0 else point_index - 1
+	var segment_length := curve.get_point_position(point_index).distance_to(curve.get_point_position(neighbor_index))
+	handle_length = minf(handle_length, segment_length / 3.0)
+	set_curve_point_out(point_index, approach_dir * handle_length)
+	set_curve_point_in(point_index, -approach_dir * handle_length)
+
+	_generate_river()
+
+
 func get_closest_point_to(point: Vector3) -> int:
 	var closest_distance := 4096.0
 	var closest_index: int = -1
@@ -458,6 +478,9 @@ func _generate_river() -> void:
 	river_width_values[river_width_values.size() - 1] = widths[widths.size() - 1]
 	mesh_instance.mesh = _WaterwaysHelperMethods.generate_river_mesh(curve, _steps, shape_step_length_divs, shape_step_width_divs, shape_smoothness, river_width_values, _uv_length_offset)
 	mesh_instance.mesh.surface_set_material(0, _material)
+	# if an endpoint of this river sits on another river's side, trim this river's
+	# mouth geometry onto that river's bank so the two meshes meet without overlap (or try to)
+	_adapt_mouth_to_main()
 
 
 func get_bake_steps() -> int:
@@ -482,6 +505,126 @@ func _find_joined_neighbor(at_start: bool) -> Dictionary:
 					return {river = r, at_start = (n_point == 0)}
 		stack.append_array(node.get_children())
 	return {}
+
+
+func _find_side_neighbor(at_start: bool) -> Dictionary:
+	if not is_inside_tree():
+		return {}
+	var my_point := 0 if at_start else curve.get_point_count() - 1
+	var my_pos := to_global(curve.get_point_position(my_point))
+	var scene_root := get_tree().get_edited_scene_root()
+	if scene_root == null:
+		return {}
+	var stack: Array[Node] = [scene_root]
+	while not stack.is_empty():
+		var node: Node = stack.pop_back()
+		if node is WaterwaysRiver and node != self:
+			var r := node as WaterwaysRiver
+			if r.curve != null and r.curve.get_point_count() >= 2 and not r.widths.is_empty():
+				var length := r.curve.get_baked_length()
+				var local := r.to_local(my_pos)
+				var offset := r.curve.get_closest_offset(local)
+				var start_margin: float = r.widths[0]
+				var end_margin: float = r.widths[r.widths.size() - 1]
+				if offset > start_margin and offset < length - end_margin:
+					var center := r.curve.sample_baked(offset)
+					var width := _WaterwaysHelperMethods.width_at_offset(r.curve, r.widths, offset)
+					if local.distance_to(center) <= width + _WaterwaysConstants.SIDE_NEIGHBOR_DISTANCE:
+						return {river = r, offset = offset}
+		stack.append_array(node.get_children())
+	return {}
+
+
+func _adapt_mouth_to_main() -> void:
+	if mesh_instance == null or mesh_instance.mesh == null:
+		return
+
+	# TODO: this can be improved a lot, check
+	var jobs: Array = []
+	for at_start in [true, false]:
+		var side := _find_side_neighbor(at_start)
+		if side.is_empty():
+			continue
+		var main: WaterwaysRiver = side.river
+		var offset: float = side.offset
+		var mouth_point := 0 if at_start else curve.get_point_count() - 1
+		var body_point := 1 if at_start else curve.get_point_count() - 2
+		var body_world := to_global(curve.get_point_position(body_point)) - to_global(curve.get_point_position(mouth_point))
+		var body_main := main.global_transform.basis.inverse() * body_world
+		var main_right := _WaterwaysHelperMethods.get_curve_forward(main.curve, offset).cross(Vector3.UP).normalized()
+		var side_sign := signf(body_main.dot(main_right))
+		if absf(side_sign) < 0.001:
+			side_sign = 1.0
+		jobs.append({main = main, side_sign = side_sign})
+	if jobs.is_empty():
+		return
+
+	var mdt := MeshDataTool.new()
+	if mdt.create_from_surface(mesh_instance.mesh, 0) != OK:
+		return
+
+	for i in mdt.get_vertex_count():
+		var world := to_global(mdt.get_vertex(i))
+		for job in jobs:
+			var main: WaterwaysRiver = job.main
+			var ss: float = job.side_sign
+			var m_local := main.to_local(world)
+			var off_m := main.curve.get_closest_offset(m_local)
+			var center := main.curve.sample_baked(off_m)
+			var right_m := _WaterwaysHelperMethods.get_curve_forward(main.curve, off_m).cross(Vector3.UP).normalized()
+			var main_w := _WaterwaysHelperMethods.width_at_offset(main.curve, main.widths, off_m)
+			var lateral := (m_local - center).dot(right_m)
+			if absf(lateral) <= main_w + _WaterwaysConstants.SIDE_NEIGHBOR_DISTANCE and lateral * ss < main_w:
+				var overlap_margin := 0.1
+				var bank_world := main.to_global(center + right_m * (ss * (main_w - overlap_margin)))
+				mdt.set_vertex(i, to_local(bank_world))
+				var normal_world := main.global_transform.basis * _WaterwaysHelperMethods.get_curve_surface_normal(main.curve, off_m)
+				mdt.set_vertex_normal(i, (global_transform.basis.inverse() * normal_world).normalized())
+				break
+
+	var new_mesh := ArrayMesh.new()
+	mdt.commit_to_surface(new_mesh)
+	new_mesh.surface_set_material(0, _material)
+	mesh_instance.mesh = new_mesh
+
+
+# Reverse of _find_side_neighbor
+func _find_tributary_mouths() -> Array:
+	var result: Array = []
+	if not is_inside_tree() or curve == null or curve.get_point_count() < 2 or widths.is_empty():
+		return result
+	var scene_root := get_tree().get_edited_scene_root()
+	if scene_root == null:
+		return result
+	var my_length := curve.get_baked_length()
+	var start_margin: float = widths[0]
+	var end_margin: float = widths[widths.size() - 1]
+	var stack: Array[Node] = [scene_root]
+	while not stack.is_empty():
+		var node: Node = stack.pop_back()
+		if node is WaterwaysRiver and node != self:
+			var t := node as WaterwaysRiver
+			if t.curve != null and t.curve.get_point_count() >= 2 and not t.widths.is_empty():
+				for ep in [0, t.curve.get_point_count() - 1]:
+					var mouth_world := t.to_global(t.curve.get_point_position(ep))
+					var ep_local := to_local(mouth_world)
+					var offset := curve.get_closest_offset(ep_local)
+					if offset <= start_margin or offset >= my_length - end_margin:
+						continue
+					var center := curve.sample_baked(offset)
+					var my_w := _WaterwaysHelperMethods.width_at_offset(curve, widths, offset)
+					if (ep_local - center).length() > my_w + _WaterwaysConstants.SIDE_NEIGHBOR_DISTANCE:
+						continue
+					var body_idx: int = 1 if ep == 0 else t.curve.get_point_count() - 2
+					var body_world := t.to_global(t.curve.get_point_position(body_idx)) - mouth_world
+					var body_local := global_transform.basis.inverse() * body_world
+					var right := _WaterwaysHelperMethods.get_curve_forward(curve, offset).cross(Vector3.UP).normalized()
+					var ss := signf(body_local.dot(right))
+					if absf(ss) < 0.001:
+						ss = 1.0
+					result.append({offset = offset, side_sign = ss, wb = float(t.widths[ep])})
+		stack.append_array(node.get_children())
+	return result
 
 
 func _generate_flowmap(flowmap_resolution: int) -> void:
@@ -629,6 +772,59 @@ func _generate_flowmap(flowmap_resolution: int) -> void:
 			dp_img, flowmap_resolution, _uv2_sides, _steps, join_at_start,
 			n.dist_pressure.get_image(), n_res, n._uv2_sides, n_steps, n_at_start)
 		matched_edge = true
+
+	# side merge (T/Y confluence) matching
+	for join_at_start in [true, false]:
+		var side := _find_side_neighbor(join_at_start)
+		if side.is_empty():
+			continue
+		var main: WaterwaysRiver = side.river
+		if not main.valid_flowmap or main.flow_foam_noise == null or main.dist_pressure == null:
+			continue
+		var main_offset: float = side.offset
+		var main_length := main.curve.get_baked_length()
+		var main_frac: float = main_offset / main_length if main_length > 0.0 else 0.0
+		var main_res := int(main.baking_resolution)
+		var main_side: int = main._uv2_sides
+		var main_steps := main.get_bake_steps()
+
+		var main_dir_world := main.global_transform.basis * _WaterwaysHelperMethods.get_curve_forward(main.curve, main_offset)
+		var main_dir_local := (global_transform.basis.inverse() * main_dir_world).normalized()
+
+		# mouth UV frame in local
+		var mouth_point := 0 if join_at_start else curve.get_point_count() - 1
+		var forward_local := _WaterwaysHelperMethods.get_endpoint_flow_direction(curve, mouth_point)
+		var right_local := forward_local.cross(Vector3.UP).normalized()
+		var flow_dir_uv := Vector2(
+			-main_dir_local.dot(right_local),
+			main_dir_local.dot(forward_local),
+		)
+
+		var body_point: int = 1 if join_at_start else curve.get_point_count() - 2
+		var body_main := main.global_transform.basis.inverse() * (to_global(curve.get_point_position(body_point)) - to_global(curve.get_point_position(mouth_point)))
+		var main_right := _WaterwaysHelperMethods.get_curve_forward(main.curve, main_offset).cross(Vector3.UP).normalized()
+		var bank_t := 0.0 if body_main.dot(main_right) >= 0.0 else 1.0
+
+		_WaterwaysHelperMethods.blend_confluence_mouth(
+			ff_img, flowmap_resolution, _uv2_sides, _steps, join_at_start, flow_dir_uv,
+			main.flow_foam_noise.get_image(), main_res, main_side, main_steps, main_frac, bank_t)
+		_WaterwaysHelperMethods.blend_confluence_mouth_scalar(
+			dp_img, flowmap_resolution, _uv2_sides, _steps, join_at_start,
+			main.dist_pressure.get_image(), main_res, main_side, main_steps, main_frac, bank_t)
+		matched_edge = true
+
+	# this river as the MAIN so kill the shore foam where tributaries
+	var self_length := curve.get_baked_length()
+	for trib in _find_tributary_mouths():
+		var frac: float = trib.offset / self_length if self_length > 0.0 else 0.0
+		var span_frac: float = (float(trib.wb) * 1.5) / self_length if self_length > 0.0 else 0.0
+		var ss: float = trib.side_sign
+		var t_lo := 0.0 if ss > 0.0 else 0.6
+		var t_hi := 0.4 if ss > 0.0 else 1.0
+		_WaterwaysHelperMethods.suppress_mouth_foam(
+			ff_img, flowmap_resolution, _uv2_sides, _steps, frac - span_frac, frac + span_frac, t_lo, t_hi)
+		matched_edge = true
+
 	if matched_edge:
 		flow_foam_noise_img = ImageTexture.create_from_image(ff_img)
 		dist_pressure_img = ImageTexture.create_from_image(dp_img)
