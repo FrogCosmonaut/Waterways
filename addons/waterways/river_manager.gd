@@ -765,10 +765,10 @@ func _generate_flowmap(flowmap_resolution: int) -> void:
 		var n_res := int(n.baking_resolution)
 		var n_steps: int = n.get_bake_steps()
 		var n_at_start: bool = neighbor.at_start
-		_WaterwaysHelperMethods.copy_joined_edge(
+		_WaterwaysRiverJoinMethods.copy_joined_edge(
 			ff_img, flowmap_resolution, _uv2_sides, _steps, join_at_start,
 			n.flow_foam_noise.get_image(), n_res, n._uv2_sides, n_steps, n_at_start)
-		_WaterwaysHelperMethods.copy_joined_edge(
+		_WaterwaysRiverJoinMethods.copy_joined_edge(
 			dp_img, flowmap_resolution, _uv2_sides, _steps, join_at_start,
 			n.dist_pressure.get_image(), n_res, n._uv2_sides, n_steps, n_at_start)
 		matched_edge = true
@@ -805,10 +805,10 @@ func _generate_flowmap(flowmap_resolution: int) -> void:
 		var main_right := _WaterwaysHelperMethods.get_curve_forward(main.curve, main_offset).cross(Vector3.UP).normalized()
 		var bank_t := 0.0 if body_main.dot(main_right) >= 0.0 else 1.0
 
-		_WaterwaysHelperMethods.blend_confluence_mouth(
+		_WaterwaysConfluenceMethods.blend_confluence_mouth(
 			ff_img, flowmap_resolution, _uv2_sides, _steps, join_at_start, flow_dir_uv,
 			main.flow_foam_noise.get_image(), main_res, main_side, main_steps, main_frac, bank_t)
-		_WaterwaysHelperMethods.blend_confluence_mouth_scalar(
+		_WaterwaysConfluenceMethods.blend_confluence_mouth_scalar(
 			dp_img, flowmap_resolution, _uv2_sides, _steps, join_at_start,
 			main.dist_pressure.get_image(), main_res, main_side, main_steps, main_frac, bank_t)
 		matched_edge = true
@@ -821,7 +821,7 @@ func _generate_flowmap(flowmap_resolution: int) -> void:
 		var ss: float = trib.side_sign
 		var t_lo := 0.0 if ss > 0.0 else 0.6
 		var t_hi := 0.4 if ss > 0.0 else 1.0
-		_WaterwaysHelperMethods.suppress_mouth_foam(
+		_WaterwaysConfluenceMethods.suppress_mouth_foam(
 			ff_img, flowmap_resolution, _uv2_sides, _steps, frac - span_frac, frac + span_frac, t_lo, t_hi)
 		matched_edge = true
 

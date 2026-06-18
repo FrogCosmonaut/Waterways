@@ -84,6 +84,11 @@ const ENDPOINT_JOIN_DISTANCE := 0.5
 ## merges into the side (interior) of another river as a T/Y confluence.
 const SIDE_JOIN_DISTANCE := 0.5
 
+## Feather width across the joined tile.
+## 1.0 = blend across the whole tile, 0.5 = blend across half of it.
+## I noticed that 0.5 works best here... Maybe this should be exported somewhere.
+const EDGE_MATCH_FEATHER := 0.5
+
 
 ## Cached filepath: Shader
 static var _cached_shaders: Dictionary[String, Shader] = {}
