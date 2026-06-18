@@ -1,0 +1,302 @@
+[gd_scene format=3 uid="uid://dqpdpokkuk8rt"]
+
+[ext_resource type="Texture2D" uid="uid://bmy1tiivywmc0" path="res://test_assets/textures/clarens_midday_2k.hdr" id="1_ixirc"]
+[ext_resource type="PackedScene" uid="uid://jxuek2deq1bv" path="res://test_assets/mesh/terrain_y_junction.glb" id="2_11yse"]
+[ext_resource type="Script" uid="uid://57l7k335edim" path="res://addons/waterways/water_system_manager.gd" id="2_vftpk"]
+[ext_resource type="Script" uid="uid://byt2oaoam06sd" path="res://addons/waterways/river_manager.gd" id="4_ov84b"]
+[ext_resource type="Texture2D" uid="uid://b8gu27xqno0pv" path="res://test_assets/test_junctions_scene_waterways/WaterwaysSystem_system_map.res" id="6_gx8u8"]
+[ext_resource type="Texture2D" uid="uid://bqd8wcyhg2a2s" path="res://test_assets/test_junctions_scene_waterways/WaterwaysSystem_WaterwaysRiver_flow_foam.res" id="8_k61ln"]
+[ext_resource type="Texture2D" uid="uid://lx1nyoh45ge8" path="res://addons/waterways/textures/foam_noise.png" id="8_r8ueu"]
+[ext_resource type="Texture2D" uid="uid://b85tlq8wcklbo" path="res://addons/waterways/textures/water1_normal_bump.png" id="9_7ws36"]
+[ext_resource type="Texture2D" uid="uid://dno4hpm3svk43" path="res://test_assets/test_junctions_scene_waterways/WaterwaysSystem_WaterwaysRiver_dist_pressure.res" id="9_t66nn"]
+[ext_resource type="Shader" uid="uid://cuvnw2fmx6e6j" path="res://addons/waterways/shaders/river.gdshader" id="10_t66nn"]
+[ext_resource type="Texture2D" uid="uid://hmppu32kkhkr" path="res://test_assets/test_junctions_scene_waterways/WaterwaysSystem_WaterwaysRiver2_flow_foam.res" id="13_t66nn"]
+[ext_resource type="Texture2D" uid="uid://bdetbbkw4huar" path="res://test_assets/test_junctions_scene_waterways/WaterwaysSystem_WaterwaysRiver2_dist_pressure.res" id="14_0xeat"]
+[ext_resource type="PackedScene" uid="uid://cio1s78ls2qgc" path="res://test_assets/mesh/paper_boat.glb" id="15_0xeat"]
+[ext_resource type="Texture2D" uid="uid://o83yqp3n1er0" path="res://test_assets/test_junctions_scene_waterways/WaterwaysSystem_WaterwaysRiverJunction_flow_foam.res" id="15_ixirc"]
+[ext_resource type="Material" uid="uid://cxrsr6muavvrl" path="res://test_assets/material/terrain_shader_material.tres" id="15_vmskc"]
+[ext_resource type="Script" uid="uid://btkilrtlw6qrj" path="res://addons/waterways/buoyant_manager.gd" id="16_fwv0u"]
+[ext_resource type="Texture2D" uid="uid://c828nf4jg6jn5" path="res://test_assets/test_junctions_scene_waterways/WaterwaysSystem_WaterwaysRiverJunction_dist_pressure.res" id="16_vftpk"]
+[ext_resource type="Material" uid="uid://ctoid07fw7ici" path="res://test_assets/material/rocks.tres" id="18_bfdle"]
+
+[sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_m1f12"]
+panorama = ExtResource("1_ixirc")
+
+[sub_resource type="Sky" id="Sky_w23eg"]
+sky_material = SubResource("PanoramaSkyMaterial_m1f12")
+
+[sub_resource type="Environment" id="Environment_hgox8"]
+background_mode = 2
+sky = SubResource("Sky_w23eg")
+ambient_light_sky_contribution = 0.1
+tonemap_mode = 2
+glow_enabled = true
+
+[sub_resource type="Curve3D" id="Curve3D_duc53"]
+bake_interval = 0.05
+_data = {
+"points": PackedVector3Array(0, 0, -0.25, 0, 0, 0.25, 0, 0, 0, 0.03304243, 0, -0.32599735, -0.03304243, 0, 0.32599735, -0.13276386, -3.2424927e-05, 2.4687004, 0.15307978, 0, -0.5935688, -0.15307978, 0, 0.5935688, -0.6971097, -3.2424927e-05, 4.8548336, 0.09798666, 0, -0.6127111, -0.09798666, 0, 0.6127111, -1.1456556, -3.2424927e-05, 7.2959538, 0.048998833, 0.2866211, -0.8601246, -0.048998833, -0.2866211, 0.8601246, -1.4044819, -0.6102619, 10.732431, -0.021778107, 0.09603882, -0.8102484, 0.021778107, -0.09603882, 0.8102484, -1.4167333, -1.0612812, 14.019709, -0.08946371, 0.2167983, -1.4789028, 0.08946371, -0.2167983, 1.4789028, -0.6678748, -2.0102851, 21.846786, 0.07220074, 0.012531758, -0.93461025, -0.07220074, -0.012531758, 0.93461025, -0.8266268, -2.5588288, 25.591988),
+"tilts": PackedFloat32Array(0, 0, 0, 0, 0, 0, 0, 0)
+}
+point_count = 8
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_0ie06"]
+render_priority = 0
+shader = ExtResource("10_t66nn")
+shader_parameter/normal_scale = 1.0
+shader_parameter/normal_bump_texture = ExtResource("9_7ws36")
+shader_parameter/uv_scale = Vector3(1, 1, 1)
+shader_parameter/roughness = 0.2
+shader_parameter/edge_fade = 0.25
+shader_parameter/albedo_color = Projection(0, 0.8, 1, 0, 0.15, 0.2, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+shader_parameter/albedo_depth = 10.0
+shader_parameter/albedo_depth_curve = 0.25
+shader_parameter/transparency_clarity = 10.0
+shader_parameter/transparency_depth_curve = 0.25
+shader_parameter/transparency_refraction = 0.05
+shader_parameter/flow_speed = 1.0
+shader_parameter/flow_base = 0.0
+shader_parameter/flow_steepness = 2.0
+shader_parameter/flow_distance = 1.0
+shader_parameter/flow_pressure = 1.0
+shader_parameter/flow_max = 4.0
+shader_parameter/foam_color = Color(0.9, 0.9, 0.9, 1)
+shader_parameter/foam_amount = 2.0
+shader_parameter/foam_steepness = 2.0
+shader_parameter/foam_smoothness = 0.3
+shader_parameter/i_lod0_distance = 50.0
+shader_parameter/i_texture_foam_noise = ExtResource("8_r8ueu")
+shader_parameter/i_flowmap = ExtResource("8_k61ln")
+shader_parameter/i_distmap = ExtResource("9_t66nn")
+shader_parameter/i_valid_flowmap = true
+shader_parameter/i_uv2_sides = 3
+
+[sub_resource type="Curve3D" id="Curve3D_fwv0u"]
+bake_interval = 0.05
+_data = {
+"points": PackedVector3Array(0.005144596, 0.012531757, -0.9373808, -0.005144596, -0.012531757, 0.9373808, -0.10480785, 0, 0.6506195, 0.103188396, 1.0371208e-05, -1.4716573, -0.103188396, -1.0371208e-05, 1.4716573, -0.44154066, -0.0022217333, 5.11755, 0.4202944, -1.2884336e-05, -0.7597183, -0.4202944, 1.2884336e-05, 0.7597183, -1.8342142, -4.1484833e-05, 9.750896),
+"tilts": PackedFloat32Array(0, 0, 0)
+}
+point_count = 3
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_aphsr"]
+render_priority = 0
+shader = ExtResource("10_t66nn")
+shader_parameter/normal_scale = 1.0
+shader_parameter/normal_bump_texture = ExtResource("9_7ws36")
+shader_parameter/uv_scale = Vector3(1, 1, 1)
+shader_parameter/roughness = 0.2
+shader_parameter/edge_fade = 0.25
+shader_parameter/albedo_color = Projection(0, 0.8, 1, 0, 0.15, 0.2, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+shader_parameter/albedo_depth = 10.0
+shader_parameter/albedo_depth_curve = 0.25
+shader_parameter/transparency_clarity = 10.0
+shader_parameter/transparency_depth_curve = 0.25
+shader_parameter/transparency_refraction = 0.05
+shader_parameter/flow_speed = 1.0
+shader_parameter/flow_base = 0.0
+shader_parameter/flow_steepness = 2.0
+shader_parameter/flow_distance = 1.0
+shader_parameter/flow_pressure = 1.0
+shader_parameter/flow_max = 4.0
+shader_parameter/foam_color = Color(0.9, 0.9, 0.9, 1)
+shader_parameter/foam_amount = 2.0
+shader_parameter/foam_steepness = 2.0
+shader_parameter/foam_smoothness = 0.3
+shader_parameter/i_lod0_distance = 50.0
+shader_parameter/i_texture_foam_noise = ExtResource("8_r8ueu")
+shader_parameter/i_flowmap = ExtResource("13_t66nn")
+shader_parameter/i_distmap = ExtResource("14_0xeat")
+shader_parameter/i_valid_flowmap = true
+shader_parameter/i_uv2_sides = 2
+
+[sub_resource type="Curve3D" id="Curve3D_gx8u8"]
+bake_interval = 0.05
+_data = {
+"points": PackedVector3Array(0, 0, -0.25, 0, 0, 0.25, 0, 0.3777461, 0, 0.26683617, 0.03759861, -0.67922115, -0.26683617, -0.03759861, 0.67922115, -2.0077744, 0.18048143, 4.2709703, 0.4132259, 0.08911133, -0.89559174, -0.4132259, -0.08911133, 0.89559174, -2.9421918, 6.055832e-05, 6.6596603, 0.23415565, 0.08154297, -0.35235023, -0.23415565, -0.08154297, 0.35235023, -4.666509, -0.3434453, 9.907713, 0.24687815, 0.11279297, -0.4862976, -0.24687815, -0.11279297, 0.4862976, -5.6977205, -0.65155077, 11.830094, 0.48038292, 0.21716309, -0.8168535, -0.48038292, -0.21716309, 0.8168535, -6.6109486, -1.0003057, 13.802875, 0.32100296, 0.15148926, -0.61860466, -0.32100296, -0.15148926, 0.61860466, -8.229962, -1.7290654, 16.44195, 1.0152254, 0.123441696, -1.7028046, -1.0152254, -0.123441696, 1.7028046, -11.434701, -2.4680877, 22.0661),
+"tilts": PackedFloat32Array(0, 0, 0, 0, 0, 0, 0, 0)
+}
+point_count = 8
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_k61ln"]
+render_priority = 0
+shader = ExtResource("10_t66nn")
+shader_parameter/normal_scale = 1.0
+shader_parameter/normal_bump_texture = ExtResource("9_7ws36")
+shader_parameter/uv_scale = Vector3(1, 1, 1)
+shader_parameter/roughness = 0.2
+shader_parameter/edge_fade = 0.25
+shader_parameter/albedo_color = Projection(0, 0.8, 1, 0, 0.15, 0.2, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+shader_parameter/albedo_depth = 10.0
+shader_parameter/albedo_depth_curve = 0.25
+shader_parameter/transparency_clarity = 10.0
+shader_parameter/transparency_depth_curve = 0.25
+shader_parameter/transparency_refraction = 0.05
+shader_parameter/flow_speed = 1.0
+shader_parameter/flow_base = 0.0
+shader_parameter/flow_steepness = 2.0
+shader_parameter/flow_distance = 1.0
+shader_parameter/flow_pressure = 1.0
+shader_parameter/flow_max = 4.0
+shader_parameter/foam_color = Color(0.9, 0.9, 0.9, 1)
+shader_parameter/foam_amount = 2.0
+shader_parameter/foam_steepness = 2.0
+shader_parameter/foam_smoothness = 0.3
+shader_parameter/i_lod0_distance = 50.0
+shader_parameter/i_texture_foam_noise = ExtResource("8_r8ueu")
+shader_parameter/i_flowmap = ExtResource("15_ixirc")
+shader_parameter/i_distmap = ExtResource("16_vftpk")
+shader_parameter/i_valid_flowmap = true
+shader_parameter/i_uv2_sides = 3
+
+[node name="TestScene" type="Node3D" unique_id=1069745227]
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=877081074]
+transform = Transform3D(0.35921264, 0.8757231, 0.32260752, 0.71158314, -0.48066697, 0.5124538, 0.6038343, 0.045482066, -0.7958114, 0, 0, 0)
+shadow_enabled = true
+metadata/_edit_lock_ = true
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=680633042]
+environment = SubResource("Environment_hgox8")
+
+[node name="terrain_y_junction" parent="." unique_id=1567411404 instance=ExtResource("2_11yse")]
+metadata/_edit_lock_ = true
+metadata/_edit_group_ = true
+
+[node name="Terrain" parent="terrain_y_junction" index="0" unique_id=1421125120]
+surface_material_override/0 = ExtResource("15_vmskc")
+
+[node name="Suzanne" parent="terrain_y_junction" index="1" unique_id=1578078995]
+editor_description = "First, delete the default cube, then, Shift+A and add Mesh>Cube."
+surface_material_override/0 = ExtResource("18_bfdle")
+
+[node name="WaterwaysSystem" type="Node3D" parent="." unique_id=1930475416]
+script = ExtResource("2_vftpk")
+system_map = ExtResource("6_gx8u8")
+_system_aabb = AABB(-20.609745, 2.6487563, -15.5, 36.474518, 3.5909898, 25.115088)
+metadata/_custom_type_script = "uid://57l7k335edim"
+metadata/_edit_lock_ = true
+
+[node name="WaterwaysRiver" type="Node3D" parent="WaterwaysSystem" unique_id=1187200922]
+transform = Transform3D(0.07154967, 0, -0.99743706, 0, 1, 0, 0.99743706, 0, 0.07154967, 15.730272, 5.2137775, 5.8958807)
+script = ExtResource("4_ov84b")
+shape_step_length_divs = 3
+shape_step_width_divs = 3
+curve = SubResource("Curve3D_duc53")
+widths = Array[float]([1.0, 1.9581791, 1.9581791, 1.9581791, 1.9581791, 2.5397845344177243, 2.2529792336013794, 2.3811371])
+valid_flowmap = true
+flow_foam_noise = ExtResource("8_k61ln")
+dist_pressure = ExtResource("9_t66nn")
+_material = SubResource("ShaderMaterial_0ie06")
+_uv2_sides = 3
+_uv_length_offset = -6.0
+mat_normal_scale = 1.0
+mat_normal_bump_texture = ExtResource("9_7ws36")
+mat_uv_scale = Vector3(1, 1, 1)
+mat_roughness = 0.2
+mat_edge_fade = 0.25
+mat_albedo_color = Projection(0, 0.8, 1, 0, 0.15, 0.2, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+mat_albedo_depth = 10.0
+mat_albedo_depth_curve = 0.25
+mat_transparency_clarity = 10.0
+mat_transparency_depth_curve = 0.25
+mat_transparency_refraction = 0.05
+mat_flow_speed = 1.0
+mat_flow_base = 0.0
+mat_flow_steepness = 2.0
+mat_flow_distance = 1.0
+mat_flow_pressure = 1.0
+mat_flow_max = 4.0
+mat_foam_color = Color(0.9, 0.9, 0.9, 1)
+mat_foam_amount = 2.0
+mat_foam_steepness = 2.0
+mat_foam_smoothness = 0.3
+metadata/_custom_type_script = "uid://byt2oaoam06sd"
+
+[node name="WaterwaysRiver2" type="Node3D" parent="WaterwaysSystem" unique_id=1628024890]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -9.204647, 2.6549487, 7.0072784)
+script = ExtResource("4_ov84b")
+shape_step_length_divs = 3
+shape_step_width_divs = 3
+curve = SubResource("Curve3D_fwv0u")
+widths = Array[float]([2.3811371, 2.8991617095779416, 3.4171862865112304])
+valid_flowmap = true
+flow_foam_noise = ExtResource("13_t66nn")
+dist_pressure = ExtResource("14_0xeat")
+_material = SubResource("ShaderMaterial_aphsr")
+_uv2_sides = 2
+mat_normal_scale = 1.0
+mat_normal_bump_texture = ExtResource("9_7ws36")
+mat_uv_scale = Vector3(1, 1, 1)
+mat_roughness = 0.2
+mat_edge_fade = 0.25
+mat_albedo_color = Projection(0, 0.8, 1, 0, 0.15, 0.2, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+mat_albedo_depth = 10.0
+mat_albedo_depth_curve = 0.25
+mat_transparency_clarity = 10.0
+mat_transparency_depth_curve = 0.25
+mat_transparency_refraction = 0.05
+mat_flow_speed = 1.0
+mat_flow_base = 0.0
+mat_flow_steepness = 2.0
+mat_flow_distance = 1.0
+mat_flow_pressure = 1.0
+mat_flow_max = 4.0
+mat_foam_color = Color(0.9, 0.9, 0.9, 1)
+mat_foam_amount = 2.0
+mat_foam_steepness = 2.0
+mat_foam_smoothness = 0.3
+metadata/_custom_type_script = "uid://byt2oaoam06sd"
+
+[node name="WaterwaysRiverJunction" type="Node3D" parent="WaterwaysSystem" unique_id=509726179]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.759, 5.862, -15.5)
+script = ExtResource("4_ov84b")
+shape_step_length_divs = 3
+shape_step_width_divs = 3
+curve = SubResource("Curve3D_gx8u8")
+widths = Array[float]([1.4114777, 1.3179638981819153, 1.3179638981819153, 1.8118600249290464, 1.520427167415619, 1.3179638981819153, 1.8978233933448792, 2.429856389760971])
+valid_flowmap = true
+flow_foam_noise = ExtResource("15_ixirc")
+dist_pressure = ExtResource("16_vftpk")
+_material = SubResource("ShaderMaterial_k61ln")
+_uv2_sides = 3
+mat_normal_scale = 1.0
+mat_normal_bump_texture = ExtResource("9_7ws36")
+mat_uv_scale = Vector3(1, 1, 1)
+mat_roughness = 0.2
+mat_edge_fade = 0.25
+mat_albedo_color = Projection(0, 0.8, 1, 0, 0.15, 0.2, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+mat_albedo_depth = 10.0
+mat_albedo_depth_curve = 0.25
+mat_transparency_clarity = 10.0
+mat_transparency_depth_curve = 0.25
+mat_transparency_refraction = 0.05
+mat_flow_speed = 1.0
+mat_flow_base = 0.0
+mat_flow_steepness = 2.0
+mat_flow_distance = 1.0
+mat_flow_pressure = 1.0
+mat_flow_max = 4.0
+mat_foam_color = Color(0.9, 0.9, 0.9, 1)
+mat_foam_amount = 2.0
+mat_foam_steepness = 2.0
+mat_foam_smoothness = 0.3
+metadata/_custom_type_script = "uid://byt2oaoam06sd"
+
+[node name="PaperBoat" parent="." unique_id=550994175 instance=ExtResource("15_0xeat")]
+transform = Transform3D(-0.8529136, -0.055094857, 0.51913685, 0, 0.9944156, 0.10553515, -0.52205217, 0.090012364, -0.84815055, 0.4585767, 5.2423005, -2.7971833)
+
+[node name="WaterwaysBuoyant" type="Node3D" parent="PaperBoat/PaperBoat" parent_id_path=PackedInt32Array(550994175, 193937869) index="4" unique_id=259130263]
+transform = Transform3D(7.2621193, 0, 0, 0, 7.262119, 0, 0, 0, 7.2621193, 0, 0, 0)
+script = ExtResource("16_fwv0u")
+buoyancy_force = 40.0
+flow_force = 25.0
+water_resistance = 3.0
+metadata/_custom_type_script = "uid://btkilrtlw6qrj"
+
+[node name="Camera3D" type="Camera3D" parent="PaperBoat/PaperBoat" parent_id_path=PackedInt32Array(550994175, 193937869) index="5" unique_id=698799248]
+transform = Transform3D(0.71989733, -0.3905018, 0.5738085, 0, 0.82671744, 0.56261736, -0.69408065, -0.40502673, 0.59515166, 0.29536915, 0.5402179, 0.5386162)
+current = true
+
+[editable path="terrain_y_junction"]
+[editable path="PaperBoat"]
